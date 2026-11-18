@@ -14,10 +14,27 @@ use Symfony\Component\Finder\Finder;
 readonly class Bootstrap
 {
     /**
+     * Builds the container and routes the current request.
+     *
      * @return void
-     * @throws Exception
+     * @throws Exception The container could not be built, or the router could not be loaded from it.
      */
     public function boot(): void
+    {
+        $container = $this->buildContainer();
+
+        /** @var Router $router */
+        $router = $container->get(Router::class);
+        $router->match();
+    }
+
+    /**
+     * Builds and compiles the dependency injection container from every package's services.yaml.
+     *
+     * @return ContainerBuilder The compiled container.
+     * @throws Exception A service file could not be loaded or the container could not be compiled.
+     */
+    public function buildContainer(): ContainerBuilder
     {
         $container = new ContainerBuilder();
         $this->configure($container);
@@ -33,9 +50,7 @@ readonly class Bootstrap
 
         $container->compile();
 
-        /** @var Router $router */
-        $router = $container->get(Router::class);
-        $router->match();
+        return $container;
     }
 
     private function configure(ContainerBuilder $container): void

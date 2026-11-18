@@ -10,3 +10,23 @@ services:
   MaxServ\App\Controller\:
     resource: '../src/Controller'
     public: true
+
+  MaxServ\App\Product\ProductRepository:
+    alias: MaxServ\App\Product\MySqlProductRepository
+
+  dummyjson.http_client:
+    class: GuzzleHttp\Client
+    arguments:
+      - timeout: 4
+        read_timeout: 4
+        stream: true
+        allow_redirects: false
+        http_errors: false
+
+  Psr\Http\Client\ClientInterface:
+    alias: dummyjson.http_client
+
+  GuzzleHttp\Psr7\HttpFactory: ~
+
+  Psr\Http\Message\RequestFactoryInterface:
+    alias: GuzzleHttp\Psr7\HttpFactory

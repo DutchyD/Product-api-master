@@ -11,6 +11,18 @@
 !/composer.json
 !/composer.lock
 
+# Command line scripts
+!/bin
+!/bin/*
+
+# Database migrations
+!/database
+!/database/**/*
+
+# Tests
+!/phpunit.xml.dist
+/.phpunit.cache
+
 # Docker
 !/Dockerfile
 !/docker-compose.yml

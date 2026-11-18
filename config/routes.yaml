@@ -1,3 +1,20 @@
 index:
   path: /
   controller: MaxServ\App\Controller\IndexController::index
+
+products:
+  path: /products
+  controller: MaxServ\App\Controller\ProductController::list
+  methods: [GET, HEAD]
+
+product_show:
+  path: /products/{id}
+  controller: MaxServ\App\Controller\ProductController::show
+  methods: [GET, HEAD]
+  requirements:
+    id: '\d{1,10}'
+
+product_import:
+  path: /products/import
+  controller: MaxServ\App\Controller\ProductController::import
+  methods: [POST]

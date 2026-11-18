@@ -1,0 +1,113 @@
+{% extends 'layout.html.twig' %}
+{% import 'products/_money.html.twig' as money %}
+{% import 'products/_links.html.twig' as links %}
+
+{% block title %}Products{% endblock %}
+
+{% block body %}
+    <h1>Products</h1>
+
+    {% for message in successMessages %}
+        <p class="message success" role="status">{{ message }}</p>
+    {% endfor %}
+    {% for message in errorMessages %}
+        <p class="message error" role="alert">{{ message }}</p>
+    {% endfor %}
+
+    <form class="import" method="post" action="/products/import">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <label>
+            Number of products
+            <input type="number" name="count" value="{{ importLimits.maxCount }}" min="{{ importLimits.minCount }}" max="{{ importLimits.maxCount }}" step="1" required>
+        </label>
+        <label>
+            Skip first
+            <input type="number" name="offset" value="0" min="{{ importLimits.minOffset }}" max="{{ importLimits.maxOffset }}" step="1" required>
+        </label>
+        <button type="submit">Import from dummyjson.com</button>
+    </form>
+
+    {% set perPage = listRequest.pageRequest.perPage %}
+
+    {% if filterOptions.categories is not empty %}
+        <form class="filters" method="get" action="/products">
+            <label>
+                Category
+                <select name="category">
+                    <option value="">All categories</option>
+                    {% for category in filterOptions.categories %}
+                        <option value="{{ category }}"{% if category == listRequest.category %} selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Brand
+                <select name="brand">
+                    <option value="">All brands</option>
+                    {% for brand in filterOptions.brands %}
+                        <option value="{{ brand }}"{% if brand == listRequest.brand %} selected{% endif %}>{{ brand }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            {% for name, value in listRequest.queryWith({category: null, brand: null}) %}
+                <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {% endfor %}
+            <button type="submit">Filter</button>
+            {% if listRequest.isFiltered() %}
+                <a href="{{ links.list(listRequest.queryWith({category: null, brand: null})) }}">Clear filters</a>
+            {% endif %}
+        </form>
+    {% endif %}
+
+    {% if productPage.totalProducts == 0 and not listRequest.isFiltered() %}
+        <p>There are no products yet. Use the form above to import products from dummyjson.com.</p>
+    {% elseif productPage.totalProducts == 0 %}
+        <p>No products match the filters. <a href="{{ links.list(listRequest.queryWith({category: null, brand: null})) }}">Clear filters</a></p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th scope="col"><span class="visually-hidden">Thumbnail</span></th>
+                    {% for column in sortColumns %}
+                        {% set direction = listRequest.directionOf(column) %}
+                        <th scope="col"{% if column.value == 'price' %} class="price"{% endif %}{% if direction is not null %} aria-sort="{{ direction.value == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+                            <a href="{{ links.list(listRequest.sortQueryFor(column)) }}">{{ column.name }}</a>
+                            {%- if direction is not null %} <span aria-hidden="true">{{ direction.value == 'asc' ? '▲' : '▼' }}</span>{% endif %}
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in productPage.products %}
+                    <tr>
+                        <td><img class="thumbnail" src="{{ product.thumbnailUrl }}" alt="{{ product.title }}" width="64" height="64" loading="lazy" referrerpolicy="no-referrer"></td>
+                        <td><a href="/products/{{ product.id }}">{{ product.title }}</a></td>
+                        <td class="price">{{ money.price(product) }}</td>
+                        <td>{{ product.brand ?? '–' }}</td>
+                        <td>{{ product.category }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <nav class="pager" aria-label="Pages">
+            {% if productPage.previousPage() is not null %}
+                <a href="{{ links.list(listRequest.queryWith({page: productPage.previousPage()})) }}" rel="prev">Previous</a>
+            {% endif %}
+            <span>Page {{ listRequest.pageRequest.page }} of {{ productPage.lastPage }} ({{ productPage.totalProducts }} products)</span>
+            {% if productPage.nextPage() is not null %}
+                <a href="{{ links.list(listRequest.queryWith({page: productPage.nextPage()})) }}" rel="next">Next</a>
+            {% endif %}
+            <span>
+                Per page:
+                {% for option in perPageOptions %}
+                    {% if option == perPage %}
+                        <strong>{{ option }}</strong>
+                    {% else %}
+                        <a href="{{ links.list(listRequest.queryWith({perPage: option})) }}">{{ option }}</a>
+                    {% endif %}
+                {% endfor %}
+            </span>
+        </nav>
+    {% endif %}
+{% endblock %}

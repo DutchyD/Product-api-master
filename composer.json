@@ -23,5 +23,17 @@
     "maxserv/core": "*"
   },
   "minimum-stability": "dev",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "require-dev": {
+    "phpunit/phpunit": "^13.4.7"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MaxServ\\App\\Tests\\": "packages/app/tests/",
+      "MaxServ\\Core\\Tests\\": "packages/core/tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit"
+  }
 }
