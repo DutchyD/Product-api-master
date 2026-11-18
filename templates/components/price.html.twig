@@ -1,0 +1,25 @@
+{#
+    Prices in euros, in Dutch notation.
+
+    euro(amount): an amount in whole euros, for example "€ 1.234,56".
+    price(product, size, tone): the price a customer pays; with a discount also the struck-through original price
+    and the discount percentage. size: 'normal' (default) or 'large'. tone: 'dark' (default) for light
+    backgrounds, or 'light' for the highlight gradient.
+#}
+{% macro euro(amount) %}€&nbsp;{{ amount|number_format(2, ',', '.') }}{% endmacro %}
+
+{% macro price(product, size = 'normal', tone = 'dark') %}
+    {%- import 'components/badge.html.twig' as badges -%}
+    {%- set sizes = { normal: 'text-base', large: 'text-3xl sm:text-4xl' } -%}
+    {%- set mainTones = { dark: 'text-ink', light: 'text-white' } -%}
+    {%- set originalTones = { dark: 'text-muted', light: 'text-white' } -%}
+    <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+        {%- if product.hasDiscount() -%}
+            <span class="font-bold {{ sizes[size] }} {{ mainTones[tone] }}" data-price><span class="sr-only">Price </span>{{ _self.euro(product.discountedPrice()) }}</span>
+            <s class="text-sm {{ originalTones[tone] }}" data-original-price><span class="sr-only">Original price </span>{{ _self.euro(product.price()) }}</s>
+            <span data-discount>{{ badges.badge('−' ~ product.discountPercentage|number_format(2, ',', '.') ~ ' %', 'danger', 'Discount') }}</span>
+        {%- else -%}
+            <span class="font-bold {{ sizes[size] }} {{ mainTones[tone] }}" data-price><span class="sr-only">Price </span>{{ _self.euro(product.price()) }}</span>
+        {%- endif -%}
+    </span>
+{%- endmacro %}

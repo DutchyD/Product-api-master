@@ -2,6 +2,7 @@ x-php-service: &php-service
   build:
     context: .
     dockerfile: Dockerfile
+    target: app
   environment:
     DB_HOST: db
     DB_USER: username
@@ -38,6 +39,16 @@ services:
       - PMA_ARBITRARY=1
       - PMA_HOST=db
       - PMA_PORT=3306
+  assets:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: assets
+    command: ["tailwindcss", "-i", "assets/styles/app.css", "-o", "public/assets/app.css", "--minify"]
+    restart: "no"
+    volumes:
+      - ./:/var/www/html:ro
+      - assets:/var/www/html/public/assets
   migrate:
     <<: *php-service
     command: ["php", "bin/migrate"]
@@ -48,10 +59,16 @@ services:
   app:
     <<: *php-service
     container_name: app
+    volumes:
+      - ./:/var/www/html
+      - assets:/var/www/html/public/assets:ro
     depends_on:
       migrate:
+        condition: service_completed_successfully
+      assets:
         condition: service_completed_successfully
     ports:
       - "8080:80"
 volumes:
   mysql_data:
+  assets:

@@ -1,113 +1,224 @@
 {% extends 'layout.html.twig' %}
-{% import 'products/_money.html.twig' as money %}
-{% import 'products/_links.html.twig' as links %}
+{% import 'components/icon.html.twig' as icons %}
+{% import 'components/links.html.twig' as links %}
 
-{% block title %}Products{% endblock %}
+{% set page = listRequest.pageRequest.page %}
+{% set sortLabels = {
+    title: { asc: 'Title, A to Z', desc: 'Title, Z to A' },
+    price: { asc: 'Price, low to high', desc: 'Price, high to low' },
+    brand: { asc: 'Brand, A to Z', desc: 'Brand, Z to A' },
+    category: { asc: 'Category, A to Z', desc: 'Category, Z to A' },
+} %}
+{% set currentOrder = listRequest.sortColumn is null ? 'Default order' : sortLabels[listRequest.sortColumn.value][listRequest.sortDirection.value] %}
 
-{% block body %}
-    <h1>Products</h1>
+{% block title %}Products{% if productPage.lastPage > 1 %}, page {{ page }} of {{ productPage.lastPage }}{% endif %}{% endblock %}
 
-    {% for message in successMessages %}
-        <p class="message success" role="status">{{ message }}</p>
-    {% endfor %}
-    {% for message in errorMessages %}
-        <p class="message error" role="alert">{{ message }}</p>
-    {% endfor %}
-
-    <form class="import" method="post" action="/products/import">
-        <input type="hidden" name="_token" value="{{ csrfToken }}">
-        <label>
-            Number of products
-            <input type="number" name="count" value="{{ importLimits.maxCount }}" min="{{ importLimits.minCount }}" max="{{ importLimits.maxCount }}" step="1" required>
-        </label>
-        <label>
-            Skip first
-            <input type="number" name="offset" value="0" min="{{ importLimits.minOffset }}" max="{{ importLimits.maxOffset }}" step="1" required>
-        </label>
-        <button type="submit">Import from dummyjson.com</button>
-    </form>
-
-    {% set perPage = listRequest.pageRequest.perPage %}
-
-    {% if filterOptions.categories is not empty %}
-        <form class="filters" method="get" action="/products">
-            <label>
-                Category
-                <select name="category">
-                    <option value="">All categories</option>
-                    {% for category in filterOptions.categories %}
-                        <option value="{{ category }}"{% if category == listRequest.category %} selected{% endif %}>{{ category }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label>
-                Brand
-                <select name="brand">
-                    <option value="">All brands</option>
-                    {% for brand in filterOptions.brands %}
-                        <option value="{{ brand }}"{% if brand == listRequest.brand %} selected{% endif %}>{{ brand }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            {% for name, value in listRequest.queryWith({category: null, brand: null}) %}
-                <input type="hidden" name="{{ name }}" value="{{ value }}">
-            {% endfor %}
-            <button type="submit">Filter</button>
-            {% if listRequest.isFiltered() %}
-                <a href="{{ links.list(listRequest.queryWith({category: null, brand: null})) }}">Clear filters</a>
+{% block content %}
+    <div class="flex flex-col gap-6">
+        <div>
+            <p class="text-xs font-semibold tracking-[0.2em] text-accent uppercase">Catalogue</p>
+            <h1 class="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">Products</h1>
+            {% if productPage.totalProducts > 0 %}
+                <p class="mt-2 text-muted" data-summary>Showing {{ productPage.firstPosition() }}–{{ productPage.lastPosition() }} of {{ productPage.totalProducts }} products</p>
             {% endif %}
-        </form>
-    {% endif %}
+        </div>
 
-    {% if productPage.totalProducts == 0 and not listRequest.isFiltered() %}
-        <p>There are no products yet. Use the form above to import products from dummyjson.com.</p>
-    {% elseif productPage.totalProducts == 0 %}
-        <p>No products match the filters. <a href="{{ links.list(listRequest.queryWith({category: null, brand: null})) }}">Clear filters</a></p>
-    {% else %}
-        <table>
-            <thead>
-                <tr>
-                    <th scope="col"><span class="visually-hidden">Thumbnail</span></th>
+        {% if successMessages is not empty %}
+            {% include 'components/alert.html.twig' with { tone: 'success', messages: successMessages } only %}
+        {% endif %}
+
+        {% if filterOptions.categories is not empty %}
+            {% embed 'components/panel.html.twig' with { element: 'section', labelledBy: 'filters-title' } %}
+                {% block content %}
+                    {%- import 'components/button.html.twig' as buttons -%}
+                    {%- import 'components/links.html.twig' as links -%}
+                    <h2 id="filters-title" class="text-xs font-semibold tracking-[0.2em] text-accent uppercase">Filter products</h2>
+                    <form method="get" action="/products" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end" data-filter-form>
+                        {% include 'components/form_field.html.twig' with {
+                            id: 'filter-category', name: 'category', label: 'Category', type: 'select', value: listRequest.category ?? '',
+                            options: [{ value: '', label: 'All categories' }]|merge(filterOptions.categories|map(category => { value: category, label: category })),
+                        } only %}
+                        {% include 'components/form_field.html.twig' with {
+                            id: 'filter-brand', name: 'brand', label: 'Brand', type: 'select', value: listRequest.brand ?? '',
+                            options: [{ value: '', label: 'All brands' }]|merge(filterOptions.brands|map(brand => { value: brand, label: brand })),
+                        } only %}
+                        {% for name, value in listRequest.queryWith({ category: null, brand: null }) %}
+                            <input type="hidden" name="{{ name }}" value="{{ value }}">
+                        {% endfor %}
+                        <div class="flex flex-wrap gap-3 sm:col-span-2 lg:col-span-1">
+                            {{ buttons.submit('Apply filters', 'primary', 'funnel') }}
+                            {% if listRequest.isFiltered() %}
+                                {{ buttons.link('Clear filters', links.list(listRequest.queryWith({ category: null, brand: null })), 'secondary', 'x-mark') }}
+                            {% endif %}
+                        </div>
+                    </form>
+                {% endblock %}
+            {% endembed %}
+        {% endif %}
+
+        {% if productPage.totalProducts == 0 and not listRequest.isFiltered() %}
+            {% include 'components/notice.html.twig' with {
+                icon: 'archive-box', title: 'No products yet',
+                text: 'Import products from dummyjson.com to fill the catalogue.',
+                action: { label: 'Import products', href: '/products/import', icon: 'arrow-down-tray' },
+            } only %}
+        {% elseif productPage.totalProducts == 0 %}
+            {% include 'components/notice.html.twig' with {
+                icon: 'funnel', title: 'No products match the filters',
+                text: 'Try another category or brand, or clear the filters to see every product.',
+                action: { label: 'Clear filters', href: links.list(listRequest.queryWith({ category: null, brand: null })), icon: 'x-mark' },
+            } only %}
+        {% else %}
+            {# Phones: a sort menu and cards. #}
+            <details class="group md:hidden" data-sort-menu>
+                <summary class="glass inline-flex min-h-11 list-none items-center gap-2 rounded-full px-5 text-sm font-semibold text-ink shadow-glass ring-1 ring-control [&::-webkit-details-marker]:hidden">
+                    {{ icons.icon('bars-arrow-down', 'size-5') }}
+                    <span>Sort: {{ currentOrder }}</span>
+                    {{ icons.icon('chevron-down', 'size-4 transition-transform group-open:rotate-180') }}
+                </summary>
+                <ul class="glass mt-2 flex flex-col rounded-3xl p-2 shadow-glass ring-1 ring-white/70" role="list">
+                    {% set sortOptions = [{ label: 'Default order', query: listRequest.queryWith({ sort: null, direction: null }), current: listRequest.sortColumn is null }] %}
                     {% for column in sortColumns %}
-                        {% set direction = listRequest.directionOf(column) %}
-                        <th scope="col"{% if column.value == 'price' %} class="price"{% endif %}{% if direction is not null %} aria-sort="{{ direction.value == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
-                            <a href="{{ links.list(listRequest.sortQueryFor(column)) }}">{{ column.name }}</a>
-                            {%- if direction is not null %} <span aria-hidden="true">{{ direction.value == 'asc' ? '▲' : '▼' }}</span>{% endif %}
-                        </th>
+                        {% for direction in ['asc', 'desc'] %}
+                            {% set sortOptions = sortOptions|merge([{
+                                label: sortLabels[column.value][direction],
+                                query: listRequest.queryWith({ sort: column.value, direction: direction }),
+                                current: listRequest.sortColumn == column and listRequest.sortDirection.value == direction,
+                            }]) %}
+                        {% endfor %}
                     {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in productPage.products %}
-                    <tr>
-                        <td><img class="thumbnail" src="{{ product.thumbnailUrl }}" alt="{{ product.title }}" width="64" height="64" loading="lazy" referrerpolicy="no-referrer"></td>
-                        <td><a href="/products/{{ product.id }}">{{ product.title }}</a></td>
-                        <td class="price">{{ money.price(product) }}</td>
-                        <td>{{ product.brand ?? '–' }}</td>
-                        <td>{{ product.category }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    {% for option in sortOptions %}
+                        <li>
+                            <a href="{{ links.list(option.query) }}"{% if option.current %} aria-current="true"{% endif %}
+                                class="flex min-h-11 items-center justify-between gap-3 rounded-2xl px-4 text-sm {{ option.current ? 'bg-badge-violet-bg font-bold text-badge-violet-text' : 'font-medium text-ink hover:bg-white' }}">
+                                <span>{{ option.label }}</span>
+                                {% if option.current %}{{ icons.icon('check', 'size-5') }}{% endif %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </details>
 
-        <nav class="pager" aria-label="Pages">
-            {% if productPage.previousPage() is not null %}
-                <a href="{{ links.list(listRequest.queryWith({page: productPage.previousPage()})) }}" rel="prev">Previous</a>
-            {% endif %}
-            <span>Page {{ listRequest.pageRequest.page }} of {{ productPage.lastPage }} ({{ productPage.totalProducts }} products)</span>
-            {% if productPage.nextPage() is not null %}
-                <a href="{{ links.list(listRequest.queryWith({page: productPage.nextPage()})) }}" rel="next">Next</a>
-            {% endif %}
-            <span>
-                Per page:
-                {% for option in perPageOptions %}
-                    {% if option == perPage %}
-                        <strong>{{ option }}</strong>
-                    {% else %}
-                        <a href="{{ links.list(listRequest.queryWith({perPage: option})) }}">{{ option }}</a>
-                    {% endif %}
+            <ul class="flex flex-col gap-3 md:hidden" role="list">
+                {% for product in productPage.products %}
+                    <li data-product-card="{{ product.id }}">
+                        {% embed 'components/panel.html.twig' with { padding: 'normal', classes: 'flex gap-4' } %}
+                            {% block content %}
+                                {%- import 'components/badge.html.twig' as badges -%}
+                                {%- import 'components/price.html.twig' as prices -%}
+                                {%- import 'components/thumbnail.html.twig' as thumbnails -%}
+                                {{ thumbnails.thumbnail(product.thumbnailUrl, '', 'medium') }}
+                                <div class="flex min-w-0 flex-col gap-1.5">
+                                    <h2 class="text-base leading-snug font-semibold"><a href="/products/{{ product.id }}" class="inline-flex min-h-6 items-center text-ink hover:text-link hover:underline">{{ product.title }}</a></h2>
+                                    <p class="flex flex-wrap items-center gap-2 text-sm text-muted">
+                                        {%- if product.brand is null -%}
+                                            <span aria-hidden="true">–</span><span class="sr-only">No brand</span>
+                                        {%- else -%}
+                                            <span>{{ product.brand }}</span>
+                                        {%- endif -%}
+                                        {{ badges.badge(product.category) }}
+                                    </p>
+                                    {{ prices.price(product) }}
+                                </div>
+                            {% endblock %}
+                        {% endembed %}
+                    </li>
                 {% endfor %}
-            </span>
-        </nav>
-    {% endif %}
+            </ul>
+
+            {# Tablets and desktops: a sortable table. #}
+            {% embed 'components/panel.html.twig' with { padding: 'none', classes: 'hidden overflow-hidden md:block' } %}
+                {% block content %}
+                    {%- import 'components/badge.html.twig' as badges -%}
+                    {%- import 'components/icon.html.twig' as icons -%}
+                    {%- import 'components/links.html.twig' as links -%}
+                    {%- import 'components/price.html.twig' as prices -%}
+                    {%- import 'components/thumbnail.html.twig' as thumbnails -%}
+                    <table class="w-full text-left text-sm">
+                        <caption class="sr-only">Products, {{ listRequest.sortColumn is null ? 'in default order' : 'sorted by ' ~ currentOrder|lower }}, page {{ page }} of {{ productPage.lastPage }}</caption>
+                        <thead class="text-xs tracking-wider text-muted uppercase">
+                            <tr>
+                                <th scope="col" class="w-20 py-4 pl-6"><span class="sr-only">Image</span></th>
+                                {% for column in sortColumns %}
+                                    {% set direction = listRequest.directionOf(column) %}
+                                    {% set nextDirection = direction is not null and direction.value == 'asc' ? 'descending' : 'ascending' %}
+                                    <th scope="col" class="px-3 py-4 {{ column.value == 'price' ? 'text-right' : '' }}"
+                                        {%- if direction is not null %} aria-sort="{{ direction.value == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+                                        <a href="{{ links.list(listRequest.sortQueryFor(column)) }}" class="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 font-semibold hover:bg-white {{ direction is not null ? 'text-link' : 'text-muted' }}" data-sort="{{ column.value }}">
+                                            <span>{{ column.name }}</span><span class="sr-only">, sort {{ nextDirection }}</span>
+                                            {%- if direction is null %}{{ icons.icon('chevron-up-down', 'size-4') }}
+                                            {%- elseif direction.value == 'asc' %}{{ icons.icon('chevron-up', 'size-4') }}
+                                            {%- else %}{{ icons.icon('chevron-down', 'size-4') }}{% endif -%}
+                                        </a>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in productPage.products %}
+                                <tr class="border-t border-white/80 transition-colors hover:bg-white/60" data-product-row="{{ product.id }}">
+                                    <td class="py-3 pl-6">{{ thumbnails.thumbnail(product.thumbnailUrl, '', 'small') }}</td>
+                                    <td class="px-5 py-3 font-semibold"><a href="/products/{{ product.id }}" class="inline-flex min-h-6 items-center text-ink hover:text-link hover:underline">{{ product.title }}</a></td>
+                                    <td class="px-5 py-3 text-right"><span class="inline-flex justify-end">{{ prices.price(product) }}</span></td>
+                                    <td class="px-5 py-3 text-ink" data-brand>
+                                        {%- if product.brand is null -%}
+                                            <span aria-hidden="true">–</span><span class="sr-only">No brand</span>
+                                        {%- else -%}
+                                            {{ product.brand }}
+                                        {%- endif -%}
+                                    </td>
+                                    <td class="py-3 pr-6 pl-5">{{ badges.badge(product.category) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endblock %}
+            {% endembed %}
+
+            <div class="flex flex-col items-center gap-4 lg:flex-row lg:justify-between">
+                <nav aria-label="Pagination" data-pagination>
+                    <ul class="flex flex-wrap items-center justify-center gap-1.5" role="list">
+                        {% if productPage.previousPage() is not null %}
+                            <li>
+                                <a href="{{ links.list(listRequest.queryWith({ page: productPage.previousPage() })) }}" rel="prev" class="glass inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold text-ink ring-1 ring-control hover:bg-white">
+                                    {{- icons.icon('chevron-left', 'size-4') -}}<span>Previous<span class="sr-only"> page</span></span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for link in productPage.pageLinks() %}
+                            <li class="hidden md:block" data-page-link>
+                                {% if link is null %}
+                                    <span class="inline-flex min-h-11 min-w-11 items-center justify-center text-muted" aria-hidden="true">…</span>
+                                {% elseif link == page %}
+                                    <a href="{{ links.list(listRequest.queryWith({ page: link })) }}" aria-current="page" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-linear-to-r from-primary-from to-primary-to px-3 text-sm font-bold text-white shadow-glow"><span class="sr-only">Page </span>{{ link }}</a>
+                                {% else %}
+                                    <a href="{{ links.list(listRequest.queryWith({ page: link })) }}" class="glass inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 text-sm font-semibold text-ink ring-1 ring-control hover:bg-white"><span class="sr-only">Page </span>{{ link }}</a>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                        <li class="px-2 text-sm font-semibold text-muted md:hidden">Page {{ page }} of {{ productPage.lastPage }}</li>
+                        {% if productPage.nextPage() is not null %}
+                            <li>
+                                <a href="{{ links.list(listRequest.queryWith({ page: productPage.nextPage() })) }}" rel="next" class="glass inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold text-ink ring-1 ring-control hover:bg-white">
+                                    <span>Next<span class="sr-only"> page</span></span>{{- icons.icon('chevron-right', 'size-4') -}}
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+                <div class="flex items-center gap-3 text-sm">
+                    <span id="per-page-label" class="font-semibold text-muted">Per page</span>
+                    <ul class="glass flex items-center gap-1 rounded-full p-1 ring-1 ring-control" role="list" aria-labelledby="per-page-label" data-per-page>
+                        {% for option in perPageOptions %}
+                            <li>
+                                <a href="{{ links.list(listRequest.queryWith({ perPage: option })) }}"{% if option == listRequest.pageRequest.perPage %} aria-current="true"{% endif %}
+                                    class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 font-semibold {{ option == listRequest.pageRequest.perPage ? 'bg-linear-to-r from-primary-from to-primary-to text-white' : 'text-ink hover:bg-white' }}">{{ option }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

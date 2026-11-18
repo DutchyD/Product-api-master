@@ -1,0 +1,52 @@
+{#
+    The import form.
+    Variables: values ({ count, offset } as entered), errors ({ count?, offset? }), failure (a message or null),
+    csrfToken, limits ({ minCount, maxCount, minOffset, maxOffset }), activeNav.
+#}
+{% extends 'layout.html.twig' %}
+
+{% block title %}Import products{% endblock %}
+
+{% block content %}
+    <div class="mx-auto flex max-w-2xl flex-col gap-6">
+        <div>
+            <p class="text-xs font-semibold tracking-[0.2em] text-accent uppercase">dummyjson.com</p>
+            <h1 class="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">Import products</h1>
+            <p class="mt-3 text-muted">Fetch up to {{ limits.maxCount }} products from dummyjson.com and store them in the catalogue. Products that are already stored are updated, so importing again never creates duplicates.</p>
+        </div>
+
+        {% if errors is not empty %}
+            {% set errorLinks = [] %}
+            {% for field, message in errors %}
+                {% set errorLinks = errorLinks|merge([{ text: message, href: '#' ~ field }]) %}
+            {% endfor %}
+            {% include 'components/alert.html.twig' with { tone: 'error', title: 'There is a problem', messages: errorLinks } only %}
+        {% endif %}
+
+        {% if failure %}
+            {% include 'components/alert.html.twig' with { tone: 'error', messages: [failure] } only %}
+        {% endif %}
+
+        {% embed 'components/panel.html.twig' with { padding: 'large' } %}
+            {% block content %}
+                {%- import 'components/button.html.twig' as buttons -%}
+                <form method="post" action="/products/import" novalidate class="flex flex-col gap-6" data-import-form>
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    {% include 'components/form_field.html.twig' with {
+                        id: 'count', name: 'count', label: 'Number of products', type: 'number', value: values.count,
+                        hint: 'A whole number from ' ~ limits.minCount ~ ' to ' ~ limits.maxCount ~ '.',
+                        error: errors.count ?? null,
+                        attributes: { min: limits.minCount, max: limits.maxCount, step: 1, inputmode: 'numeric', required: true },
+                    } only %}
+                    {% include 'components/form_field.html.twig' with {
+                        id: 'offset', name: 'offset', label: 'Skip first', type: 'number', value: values.offset,
+                        hint: 'A whole number from ' ~ limits.minOffset ~ ' to ' ~ limits.maxOffset ~ '.',
+                        error: errors.offset ?? null,
+                        attributes: { min: limits.minOffset, max: limits.maxOffset, step: 1, inputmode: 'numeric', required: true },
+                    } only %}
+                    <div>{{ buttons.submit('Import products', 'primary', 'arrow-down-tray') }}</div>
+                </form>
+            {% endblock %}
+        {% endembed %}
+    </div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{#
+    Buttons in the primary (gradient) and secondary (glass) style, at least 44 px high.
+
+    link(label, href, variant, icon): a link that looks like a button.
+    submit(label, variant, icon): a submit button.
+    variant: 'primary' (default) or 'secondary'. icon: a name from icon.html.twig shown before the label, or null.
+#}
+{% macro link(label, href, variant = 'primary', icon = null) %}
+    {%- import 'components/icon.html.twig' as icons -%}
+    {%- set variants = {
+        primary: 'bg-linear-to-r from-primary-from to-primary-to text-white shadow-glow hover:from-primary-to hover:to-primary-from',
+        secondary: 'glass text-ink ring-1 ring-control hover:bg-white',
+    } -%}
+    <a href="{{ href }}" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors {{ variants[variant] }}">
+        {%- if icon %}{{ icons.icon(icon, 'size-5') }}{% endif -%}
+        <span>{{ label }}</span>
+    </a>
+{%- endmacro %}
+
+{% macro submit(label, variant = 'primary', icon = null) %}
+    {%- import 'components/icon.html.twig' as icons -%}
+    {%- set variants = {
+        primary: 'bg-linear-to-r from-primary-from to-primary-to text-white shadow-glow hover:from-primary-to hover:to-primary-from',
+        secondary: 'glass text-ink ring-1 ring-control hover:bg-white',
+    } -%}
+    <button type="submit" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors {{ variants[variant] }}">
+        {%- if icon %}{{ icons.icon(icon, 'size-5') }}{% endif -%}
+        <span>{{ label }}</span>
+    </button>
+{%- endmacro %}

@@ -1,9 +1,0 @@
-{% macro euro(amount) %}€&nbsp;{{ amount|number_format(2, ',', '.') }}{% endmacro %}
-
-{% macro price(product) %}
-    {%- if product.hasDiscount() -%}
-        <s class="original-price">{{ _self.euro(product.price()) }}</s><span class="discount-price">{{ _self.euro(product.discountedPrice()) }}</span>
-    {%- else -%}
-        {{ _self.euro(product.price()) }}
-    {%- endif -%}
-{% endmacro %}

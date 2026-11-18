@@ -1,0 +1,14 @@
+{#
+    A translucent glass panel. Embed it and fill the `content` block.
+
+    element: 'div' (default), 'section', 'article' or 'aside'.
+    padding: 'normal' (default), 'large' or 'none'.
+    labelledBy: the id of the heading that names the panel, for sections; optional.
+    classes: extra complete Tailwind class names; optional.
+#}
+{%- set tag = element|default('div') in ['div', 'section', 'article', 'aside'] ? element|default('div') : 'div' -%}
+{%- set paddings = { normal: 'p-5 sm:p-6', large: 'p-6 sm:p-8 lg:p-10', none: '' } -%}
+<{{ tag }} class="glass rounded-3xl shadow-glass ring-1 ring-white/70 {{ paddings[padding|default('normal')] }} {{ classes|default('') }}"
+    {%- if labelledBy|default(null) %} aria-labelledby="{{ labelledBy }}"{% endif %}>
+    {% block content %}{% endblock %}
+</{{ tag }}>

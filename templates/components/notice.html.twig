@@ -1,0 +1,22 @@
+{#
+    A centred message for empty states and error pages. Include it with `only`.
+
+    icon: a name from icon.html.twig. title, text: required.
+    headingLevel: 'h1' for a page of its own, 'h2' (default) inside a page.
+    action: an optional { label, href, variant, icon } shown as a button.
+#}
+{%- set heading = headingLevel|default('h2') in ['h1', 'h2'] ? headingLevel|default('h2') : 'h2' -%}
+{% embed 'components/panel.html.twig' with { padding: 'large', classes: 'flex flex-col items-center gap-4 text-center' } %}
+    {% block content %}
+        {%- import 'components/button.html.twig' as buttons -%}
+        {%- import 'components/icon.html.twig' as icons -%}
+        <span class="grid size-16 place-items-center rounded-full bg-linear-to-br from-primary-from to-secondary-to text-white shadow-glow">
+            {{- icons.icon(icon, 'size-8') -}}
+        </span>
+        <{{ heading }} class="text-xl font-bold text-ink sm:text-2xl">{{ title }}</{{ heading }}>
+        <p class="max-w-prose text-muted">{{ text }}</p>
+        {%- if action|default(null) %}
+            <div class="mt-2">{{ buttons.link(action.label, action.href, action.variant|default('primary'), action.icon|default(null)) }}</div>
+        {%- endif %}
+    {% endblock %}
+{% endembed %}

@@ -54,4 +54,57 @@ final readonly class ProductPage
 
         return $page < $this->lastPage ? $page + 1 : null;
     }
+
+    /**
+     * Returns the position of the first product on this page among all matching products.
+     *
+     * @return int The 1-based position, or 0 when no product matches.
+     */
+    #[\NoDiscard]
+    public function firstPosition(): int
+    {
+        return $this->products === [] ? 0 : $this->listRequest->pageRequest->offset() + 1;
+    }
+
+    /**
+     * Returns the position of the last product on this page among all matching products.
+     *
+     * @return int The 1-based position, or 0 when no product matches.
+     */
+    #[\NoDiscard]
+    public function lastPosition(): int
+    {
+        return $this->products === [] ? 0 : $this->listRequest->pageRequest->offset() + count($this->products);
+    }
+
+    /**
+     * Returns the page numbers to link to: the first page, the last page and the pages next to the current one.
+     *
+     * A gap of one page shows that page; a longer gap is a null entry, shown as an ellipsis.
+     *
+     * @return list<int|null> The page numbers in order, with null for each longer gap.
+     */
+    #[\NoDiscard]
+    public function pageLinks(): array
+    {
+        $current = $this->listRequest->pageRequest->page;
+        $pages = array_unique([1, $current - 1, $current, $current + 1, $this->lastPage]);
+        $pages = array_values(array_filter($pages, fn (int $page): bool => $page >= 1 && $page <= $this->lastPage));
+        sort($pages);
+
+        $links = [];
+        $previous = 0;
+        foreach ($pages as $page) {
+            if ($page - $previous === 2) {
+                $links[] = $page - 1;
+            } elseif ($page - $previous > 2) {
+                $links[] = null;
+            }
+
+            $links[] = $page;
+            $previous = $page;
+        }
+
+        return $links;
+    }
 }

@@ -36,33 +36,44 @@ final class ImportRequestTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{array<string, mixed>}>
+     * Form input that is not allowed, with the field errors it should produce.
+     *
+     * @return iterable<string, array{array<string, mixed>, array<string, string>}>
      */
     public static function rejectedInput(): iterable
     {
-        yield 'count zero' => [['count' => '0', 'offset' => '0']];
-        yield 'count above maximum' => [['count' => '201', 'offset' => '0']];
-        yield 'negative offset' => [['count' => '10', 'offset' => '-1']];
-        yield 'offset above maximum' => [['count' => '10', 'offset' => '10001']];
-        yield 'count not a number' => [['count' => 'ten', 'offset' => '0']];
-        yield 'count decimal' => [['count' => '1.5', 'offset' => '0']];
-        yield 'count empty' => [['count' => '', 'offset' => '0']];
-        yield 'count missing' => [['offset' => '0']];
-        yield 'offset missing' => [['count' => '10']];
-        yield 'count array' => [['count' => ['10'], 'offset' => '0']];
-        yield 'count too many digits' => [['count' => '000001', 'offset' => '0']];
+        $count = 'Enter a whole number from 1 to 200.';
+        $offset = 'Enter a whole number from 0 to 10000.';
+
+        yield 'count zero' => [['count' => '0', 'offset' => '0'], ['count' => $count]];
+        yield 'count above maximum' => [['count' => '201', 'offset' => '0'], ['count' => $count]];
+        yield 'negative offset' => [['count' => '10', 'offset' => '-1'], ['offset' => $offset]];
+        yield 'offset above maximum' => [['count' => '10', 'offset' => '10001'], ['offset' => $offset]];
+        yield 'count not a number' => [['count' => 'ten', 'offset' => '0'], ['count' => $count]];
+        yield 'count decimal' => [['count' => '1.5', 'offset' => '0'], ['count' => $count]];
+        yield 'count empty' => [['count' => '', 'offset' => '0'], ['count' => $count]];
+        yield 'count missing' => [['offset' => '0'], ['count' => $count]];
+        yield 'offset missing' => [['count' => '10'], ['offset' => $offset]];
+        yield 'count array' => [['count' => ['10'], 'offset' => '0'], ['count' => $count]];
+        yield 'count too many digits' => [['count' => '000001', 'offset' => '0'], ['count' => $count]];
+        yield 'both fields wrong' => [['count' => '0', 'offset' => '10001'], ['count' => $count, 'offset' => $offset]];
+        yield 'both fields missing' => [[], ['count' => $count, 'offset' => $offset]];
     }
 
     /**
      * @param array<string, mixed> $input
+     * @param array<string, string> $expectedErrors
      */
     #[Test]
     #[DataProvider('rejectedInput')]
-    public function invalid_count_or_offset_is_rejected_with_the_allowed_ranges(array $input): void
+    public function invalid_fields_are_each_rejected_with_their_allowed_range(array $input, array $expectedErrors): void
     {
-        $this->expectException(InvalidImportRequest::class);
-        $this->expectExceptionMessage('Count must be a whole number from 1 to 200, and offset a whole number from 0 to 10000.');
-
-        ImportRequest::fromInput($input);
+        try {
+            (void) ImportRequest::fromInput($input);
+            self::fail('The input should be rejected.');
+        } catch (InvalidImportRequest $exception) {
+            self::assertSame($expectedErrors, $exception->fieldErrors());
+            self::assertSame(implode(' ', $expectedErrors), $exception->getMessage());
+        }
     }
 }

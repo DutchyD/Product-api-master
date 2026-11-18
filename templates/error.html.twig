@@ -1,0 +1,13 @@
+{#
+    A page with one message, for "Product not found" and "Form expired".
+    Variables: title, text, action ({ label, href, icon }), activeNav.
+#}
+{% extends 'layout.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="mx-auto max-w-2xl pt-4 sm:pt-10">
+        {% include 'components/notice.html.twig' with { icon: 'exclamation-triangle', title: title, text: text, headingLevel: 'h1', action: action } only %}
+    </div>
+{% endblock %}
