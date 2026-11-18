@@ -6,6 +6,8 @@
 !/public
 !/packages
 !/templates
+!/bin
+!/database
 
 # Composer
 !/composer.json

@@ -47,6 +47,15 @@ services:
       $password: '%db.password%'
       $database: '%db.database%'
 
+  MaxServ\Core\Database\MigrationRunner:
+    public: true
+
+  MaxServ\Core\Logging\Logger:
+    alias: MaxServ\Core\Logging\PhpErrorLogger
+
+  MaxServ\Core\Time\MonotonicClock:
+    alias: MaxServ\Core\Time\HrtimeClock
+
   Twig\Loader\FilesystemLoader:
     class: 'Twig\Loader\FilesystemLoader'
     arguments:

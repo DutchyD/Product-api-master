@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use MaxServ\Core\Bootstrap;
+use MaxServ\Core\Database\MigrationRunner;
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+require_once APPLICATION_ROOT . '/vendor/autoload.php';
+
+const MIGRATIONS_DIRECTORY = APPLICATION_ROOT . '/database/migrations';
+const EXIT_SUCCESS = 0;
+const EXIT_FAILURE = 1;
+
+try {
+    $container = new Bootstrap()->buildContainer();
+
+    /** @var MigrationRunner $runner */
+    $runner = $container->get(MigrationRunner::class);
+    $applied = $runner->migrate(MIGRATIONS_DIRECTORY);
+} catch (Throwable $exception) {
+    fwrite(STDERR, 'Migration failed: ' . $exception->getMessage() . PHP_EOL);
+    exit(EXIT_FAILURE);
+}
+
+if ($applied === []) {
+    echo 'Nothing to migrate' . PHP_EOL;
+    exit(EXIT_SUCCESS);
+}
+
+foreach ($applied as $version) {
+    echo "Applied $version" . PHP_EOL;
+}
+
+exit(EXIT_SUCCESS);

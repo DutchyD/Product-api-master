@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true"
+         executionOrder="random"
+         requireCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutCoverageMetadata="true"
+         failOnDeprecation="true"
+         failOnPhpunitDeprecation="true"
+         failOnNotice="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnEmptyTestSuite="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnPhpunitDeprecations="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerErrors="true">
+    <php>
+        <ini name="error_reporting" value="-1"/>
+        <ini name="display_errors" value="1"/>
+    </php>
+    <testsuites>
+        <testsuite name="core">
+            <directory>packages/core/tests</directory>
+        </testsuite>
+        <testsuite name="app">
+            <directory>packages/app/tests</directory>
+        </testsuite>
+    </testsuites>
+    <source ignoreSuppressionOfDeprecations="true">
+        <include>
+            <directory>packages/app/src</directory>
+            <directory>packages/core/src</directory>
+        </include>
+    </source>
+</phpunit>

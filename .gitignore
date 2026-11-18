@@ -4,12 +4,25 @@
 # Project files
 !/.gitignore
 !/README.md
+!/IMPLEMENTATION.md
 !/public
 !/public/index.php
 
 # Composer
 !/composer.json
 !/composer.lock
+
+# Command line scripts
+!/bin
+!/bin/*
+
+# Database migrations
+!/database
+!/database/**/*
+
+# Tests
+!/phpunit.xml.dist
+/.phpunit.cache
 
 # Docker
 !/Dockerfile

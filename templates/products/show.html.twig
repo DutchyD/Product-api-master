@@ -1,0 +1,61 @@
+{% extends 'layout.html.twig' %}
+{% import 'products/_money.html.twig' as money %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block body %}
+    <p><a href="/products">Back to the products</a></p>
+
+    <h1>{{ product.title }}</h1>
+
+    <div class="gallery">
+        {% for imageUrl in product.imageUrls %}
+            <img src="{{ imageUrl }}" alt="{{ product.title }}, image {{ loop.index }}" width="160" height="160" loading="lazy" referrerpolicy="no-referrer">
+        {% else %}
+            <img src="{{ product.thumbnailUrl }}" alt="{{ product.title }}" width="160" height="160" referrerpolicy="no-referrer">
+        {% endfor %}
+    </div>
+
+    <p>{{ product.description }}</p>
+
+    <dl>
+        <dt>Price</dt>
+        <dd>{{ money.price(product) }}</dd>
+        <dt>Discount</dt>
+        <dd>{{ product.discountPercentage|number_format(2, ',', '.') }}&nbsp;%</dd>
+        <dt>Category</dt>
+        <dd>{{ product.category }}</dd>
+        <dt>Brand</dt>
+        <dd>{{ product.brand ?? '–' }}</dd>
+        <dt>Rating</dt>
+        <dd>{{ product.rating|number_format(2, ',', '.') }} of 5</dd>
+        <dt>Stock</dt>
+        <dd>{{ product.stock }}</dd>
+        <dt>Availability</dt>
+        <dd>{{ product.availabilityStatus.value }}</dd>
+        <dt>Minimum order quantity</dt>
+        <dd>{{ product.minimumOrderQuantity }}</dd>
+        <dt>SKU</dt>
+        <dd>{{ product.sku }}</dd>
+        <dt>Barcode</dt>
+        <dd>{{ product.barcode }}</dd>
+        <dt>Weight</dt>
+        <dd>{{ product.weight|number_format(2, ',', '.') }}</dd>
+        <dt>Dimensions (width × height × depth)</dt>
+        <dd>{{ product.dimensions.width|number_format(2, ',', '.') }} × {{ product.dimensions.height|number_format(2, ',', '.') }} × {{ product.dimensions.depth|number_format(2, ',', '.') }}</dd>
+        <dt>Warranty</dt>
+        <dd>{{ product.warrantyInformation }}</dd>
+        <dt>Shipping</dt>
+        <dd>{{ product.shippingInformation }}</dd>
+        <dt>Return policy</dt>
+        <dd>{{ product.returnPolicy }}</dd>
+        <dt>Tags</dt>
+        <dd>{{ product.tags is empty ? '–' : product.tags|join(', ') }}</dd>
+        <dt>QR code</dt>
+        <dd><img src="{{ product.qrCodeUrl }}" alt="QR code for {{ product.title }}" width="96" height="96" loading="lazy" referrerpolicy="no-referrer"></dd>
+        <dt>Created at dummyjson.com</dt>
+        <dd>{{ product.sourceCreatedAt|date('Y-m-d H:i', 'UTC') }} UTC</dd>
+        <dt>Updated at dummyjson.com</dt>
+        <dd>{{ product.sourceUpdatedAt|date('Y-m-d H:i', 'UTC') }} UTC</dd>
+    </dl>
+{% endblock %}

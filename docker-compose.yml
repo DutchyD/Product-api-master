@@ -1,4 +1,14 @@
-version: '3.1'
+x-php-service: &php-service
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    DB_HOST: db
+    DB_USER: username
+    DB_PASSWORD: password
+    DB_DATABASE: database
+  volumes:
+    - ./:/var/www/html
 
 services:
   db:
@@ -12,6 +22,13 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      # TCP only: MySQL accepts TCP connections after its first-start initialisation has finished.
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp -h 127.0.0.1 -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" --silent"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
   phpmyadmin:
     image: phpmyadmin:5.2.3-apache
     restart: always
@@ -21,21 +38,20 @@ services:
       - PMA_ARBITRARY=1
       - PMA_HOST=db
       - PMA_PORT=3306
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: app
-    environment:
-      DB_HOST: db
-      DB_USER: username
-      DB_PASSWORD: password
-      DB_DATABASE: database
+  migrate:
+    <<: *php-service
+    command: ["php", "bin/migrate"]
+    restart: "no"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+  app:
+    <<: *php-service
+    container_name: app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     ports:
       - "8080:80"
-    volumes:
-      - ./:/var/www/html
 volumes:
   mysql_data:
