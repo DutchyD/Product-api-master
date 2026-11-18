@@ -1,0 +1,27 @@
+{
+  "name": "maxserv/opdracht-klas-2024",
+  "description": "Docker & PHP opdracht voor de klas van 2024",
+  "license": "GPL-2.0-or-later",
+  "repositories": [
+    {
+      "type": "path",
+      "url": "packages/*"
+    }
+  ],
+  "require": {
+    "php": "^8.5",
+    "guzzlehttp/guzzle": "^8.5",
+    "symfony/routing": "^v8.1",
+    "symfony/config": "^v8.1",
+    "symfony/yaml": "^v8.1",
+    "symfony/http-foundation": "^v8.1",
+    "symfony/dependency-injection": "^v8.1",
+    "symfony/finder": "^v8.1",
+    "ext-pdo": "*",
+    "twig/twig": "^v3.30",
+    "maxserv/app": "*",
+    "maxserv/core": "*"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
