@@ -4,6 +4,7 @@
 # Project files
 !/.gitignore
 !/README.md
+!/IMPLEMENTATION.md
 !/public
 !/public/index.php
 
