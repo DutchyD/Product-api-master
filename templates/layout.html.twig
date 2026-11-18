@@ -1,32 +1,62 @@
+{#
+    The shell of every page. Pages fill the `title` block (empty for the start page) and the `content` block,
+    and set `activeNav` to 'products' or 'import' to highlight a navigation link. Set `activeNavIsPage` to
+    false when the page is inside that section but is not the linked page itself, such as a product page.
+#}
+{%- set pageTitle = block('title') is defined ? block('title')|trim : '' -%}
+{%- set currentNav = activeNav|default(null) -%}
+{#- `default` treats false as empty, so the flag is compared explicitly. -#}
+{%- set currentNavState = activeNavIsPage is defined and activeNavIsPage is same as(false) ? 'true' : 'page' -%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Products{% endblock %} · MaxServ B.V. assignment</title>
-    <style>
-        body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 64rem; padding: 0 1rem; color: #1f2328; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border-bottom: 1px solid #d0d7de; padding: 0.5rem; text-align: left; vertical-align: middle; }
-        td.price, th.price { text-align: right; white-space: nowrap; }
-        .original-price { color: #6e7781; margin-right: 0.5rem; }
-        .discount-price { font-weight: 600; }
-        .thumbnail { width: 64px; height: 64px; object-fit: contain; }
-        .gallery img { width: 160px; height: 160px; object-fit: contain; margin: 0 0.5rem 0.5rem 0; }
-        .message { padding: 0.75rem 1rem; border-radius: 0.375rem; margin-bottom: 1rem; }
-        .message.success { background: #dafbe1; }
-        .message.error { background: #ffebe9; }
-        .pager { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
-        form.import, form.filters { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        form.import label, form.filters label { display: flex; flex-direction: column; gap: 0.25rem; }
-        th a { color: inherit; }
-        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-        dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
-        dt { font-weight: 600; }
-        dd { margin: 0; }
-    </style>
+    {# The title block is already escaped when it is rendered, so it must not be escaped again. #}
+    <title>{% if pageTitle is not empty %}{{ pageTitle|raw }} · {% endif %}Product catalogue</title>
+    <link rel="preload" href="/fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/assets/app.css">
 </head>
-<body>
-    {% block body %}{% endblock %}
+<body class="relative min-h-screen overflow-x-hidden font-sans text-ink antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div class="absolute -top-24 -left-24 size-80 rounded-full bg-orb-violet/40 blur-3xl"></div>
+        <div class="absolute top-1/3 -right-32 size-96 rounded-full bg-orb-pink/35 blur-3xl"></div>
+        <div class="absolute -bottom-32 left-1/4 size-80 rounded-full bg-orb-sky/35 blur-3xl"></div>
+    </div>
+
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-full focus:bg-white focus:px-5 focus:font-semibold focus:text-link focus:shadow-glass">Skip to main content</a>
+
+    <div class="mx-auto flex min-h-screen max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
+        <header class="py-4 sm:py-6">
+            <div class="glass flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-3xl px-3 py-2 shadow-glass ring-1 ring-white/70 sm:rounded-full sm:px-5">
+                <a href="/" class="inline-flex min-h-11 items-center gap-2.5 rounded-full pr-2 font-bold text-ink">
+                    <span class="grid size-9 place-items-center rounded-xl bg-linear-to-br from-primary-from to-secondary-to text-white shadow-glow" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5" focusable="false"><path d="M12 2.5 14.6 9.4 21.5 12 14.6 14.6 12 21.5 9.4 14.6 2.5 12 9.4 9.4Z"/></svg>
+                    </span>
+                    <span class="text-lg tracking-tight">Catalogue</span>
+                </a>
+                <nav aria-label="Main">
+                    <ul class="flex items-center gap-1 sm:gap-2" role="list">
+                        <li>
+                            <a href="/products"{% if currentNav == 'products' %} aria-current="{{ currentNavState }}"{% endif %}
+                                class="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors {{ currentNav == 'products' ? 'bg-linear-to-r from-primary-from to-primary-to text-white shadow-glow' : 'text-ink hover:bg-white/80' }}">Products</a>
+                        </li>
+                        <li>
+                            <a href="/products/import"{% if currentNav == 'import' %} aria-current="{{ currentNavState }}"{% endif %}
+                                class="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold transition-colors {{ currentNav == 'import' ? 'bg-linear-to-r from-primary-from to-primary-to text-white shadow-glow' : 'text-ink hover:bg-white/80' }}">Import<span class="hidden sm:inline">&nbsp;products</span></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <main id="main" tabindex="-1" class="flex-1 pb-12 focus:outline-none">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="border-t border-white/70 py-6 text-sm text-muted">
+            Product data from <a href="https://dummyjson.com/products" class="font-semibold text-link underline underline-offset-2">dummyjson.com</a>.
+        </footer>
+    </div>
 </body>
 </html>

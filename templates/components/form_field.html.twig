@@ -1,0 +1,41 @@
+{#
+    A labelled form control with an optional hint and error. Include it with `only`.
+
+    id, name, label: required. type: 'select' or an input type such as 'number' (default 'text').
+    value: the current value. options: for a select, a list of { value, label }.
+    hint, error: optional texts; both are linked to the control through aria-describedby.
+    attributes: extra input attributes such as { min: 1, max: 200, required: true }; optional.
+#}
+{%- import 'components/icon.html.twig' as icons -%}
+{%- set describedBy = [hint|default(null) ? id ~ '-hint' : null, error|default(null) ? id ~ '-error' : null]|filter(part => part is not null) -%}
+{%- set controlClasses = error|default(null)
+    ? 'min-h-11 w-full rounded-xl border-2 border-badge-danger-text bg-white px-3.5 py-2 text-base text-ink'
+    : 'min-h-11 w-full rounded-xl border border-control bg-white px-3.5 py-2 text-base text-ink' -%}
+<div class="flex flex-col gap-1.5">
+    <label for="{{ id }}" class="text-sm font-semibold text-ink">{{ label }}</label>
+    {%- if hint|default(null) %}
+        <p id="{{ id }}-hint" class="text-sm text-muted">{{ hint }}</p>
+    {%- endif %}
+    {%- if error|default(null) %}
+        <p id="{{ id }}-error" class="flex items-center gap-1.5 text-sm font-semibold text-badge-danger-text">
+            {{- icons.icon('exclamation-triangle', 'size-4') -}}
+            <span><span class="sr-only">Error: </span>{{ error }}</span>
+        </p>
+    {%- endif %}
+    {%- if type|default('text') == 'select' %}
+        <select id="{{ id }}" name="{{ name }}" class="{{ controlClasses }}"
+            {%- if describedBy is not empty %} aria-describedby="{{ describedBy|join(' ') }}"{% endif %}
+            {%- if error|default(null) %} aria-invalid="true"{% endif %}>
+            {%- for option in options|default([]) %}
+                <option value="{{ option.value }}"{% if option.value == value|default('') %} selected{% endif %}>{{ option.label }}</option>
+            {%- endfor %}
+        </select>
+    {%- else %}
+        <input id="{{ id }}" name="{{ name }}" type="{{ type|default('text') }}" value="{{ value|default('') }}" class="{{ controlClasses }}"
+            {%- for attribute, attributeValue in attributes|default({}) %}
+                {%- if attributeValue is same as(true) %} {{ attribute }}{% elseif attributeValue is not same as(false) %} {{ attribute }}="{{ attributeValue }}"{% endif %}
+            {%- endfor %}
+            {%- if describedBy is not empty %} aria-describedby="{{ describedBy|join(' ') }}"{% endif %}
+            {%- if error|default(null) %} aria-invalid="true"{% endif %}>
+    {%- endif %}
+</div>

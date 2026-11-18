@@ -30,10 +30,15 @@ use Twig\Error\Error as TwigError;
 final readonly class ProductController
 {
     private const string LIST_PATH = '/products';
+    private const string IMPORT_PATH = '/products/import';
     private const string FLASH_SUCCESS = 'success';
-    private const string FLASH_ERROR = 'error';
+    private const string NAV_PRODUCTS = 'products';
+    private const string NAV_IMPORT = 'import';
     private const string MAX_ID_DIGITS_PATTERN = '/^\d{1,10}$/';
     private const int MAX_PRODUCT_ID = 4_294_967_295;
+    private const int MAX_KEPT_VALUE_LENGTH = 32;
+    private const string DEFAULT_IMPORT_COUNT = '200';
+    private const string DEFAULT_IMPORT_OFFSET = '0';
     private const string IMPORT_FAILED_MESSAGE = 'The import failed: dummyjson.com could not be reached, '
         . 'returned an invalid response, or the products could not be stored. '
         . 'Products stored before the failure are kept.';
@@ -57,8 +62,8 @@ final readonly class ProductController
     }
 
     /**
-     * Shows one page of the stored products, filtered and sorted as requested, with the filter and import forms and
-     * the result of the last import.
+     * Shows one page of the stored products, filtered and sorted as requested, with the filter form and the result of
+     * the last import.
      *
      * @param array<string, mixed> $parameters The route parameters.
      * @param Request $request The request; its query may hold category, brand, sort, direction, page and perPage.
@@ -66,14 +71,12 @@ final readonly class ProductController
      * @return Response The product list page.
      * @throws TwigError The template could not be rendered.
      * @throws \PDOException The products could not be read.
-     * @throws \Random\RandomException No random source is available to create the form token.
      * @throws \RuntimeException The session could not be started.
      * @throws LogicException The request session does not support flash messages.
      */
     public function list(array $parameters, Request $request): Response
     {
         $productPage = $this->productRepository->findPage(ProductListRequest::fromQuery($request->query->all()));
-        $flashBag = $this->flashBag($request);
 
         return new Response($this->templateRenderer->render('products/list.html.twig', [
             'productPage' => $productPage,
@@ -81,15 +84,8 @@ final readonly class ProductController
             'filterOptions' => $this->productRepository->findFilterOptions(),
             'sortColumns' => SortColumn::cases(),
             'perPageOptions' => PageRequest::PER_PAGE_OPTIONS,
-            'csrfToken' => $this->csrfTokenManager->tokenFor($request->getSession()),
-            'successMessages' => $flashBag->get(self::FLASH_SUCCESS),
-            'errorMessages' => $flashBag->get(self::FLASH_ERROR),
-            'importLimits' => [
-                'minCount' => ImportRequest::MIN_COUNT,
-                'maxCount' => ImportRequest::MAX_COUNT,
-                'minOffset' => ImportRequest::MIN_OFFSET,
-                'maxOffset' => ImportRequest::MAX_OFFSET,
-            ],
+            'successMessages' => $this->flashBag($request)->get(self::FLASH_SUCCESS),
+            'activeNav' => self::NAV_PRODUCTS,
         ]));
     }
 
@@ -111,22 +107,55 @@ final readonly class ProductController
             : null;
 
         if ($product === null) {
-            return new Response(
-                $this->templateRenderer->render('products/not_found.html.twig', []),
+            return $this->errorPage(
+                'Product not found',
+                'No product has this id. It may not have been imported yet.',
+                ['label' => 'Back to the products', 'href' => self::LIST_PATH, 'icon' => 'chevron-left'],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
-        return new Response($this->templateRenderer->render('products/show.html.twig', ['product' => $product]));
+        return new Response($this->templateRenderer->render('products/show.html.twig', [
+            'product' => $product,
+            'activeNav' => self::NAV_PRODUCTS,
+            'activeNavIsPage' => false,
+        ]));
     }
 
     /**
-     * Imports products from dummyjson.com when the form token is valid, then redirects to the product list.
+     * Shows the import form with its default values.
+     *
+     * @param array<string, mixed> $parameters The route parameters.
+     * @param Request $request The request.
+     *
+     * @return Response The import page.
+     * @throws TwigError The template could not be rendered.
+     * @throws \Random\RandomException No random source is available to create the form token.
+     * @throws \RuntimeException The session could not be started.
+     */
+    public function importForm(array $parameters, Request $request): Response
+    {
+        return $this->importPage(
+            $request,
+            [ImportRequest::FIELD_COUNT => self::DEFAULT_IMPORT_COUNT, ImportRequest::FIELD_OFFSET => self::DEFAULT_IMPORT_OFFSET],
+            [],
+            null,
+            Response::HTTP_OK,
+        );
+    }
+
+    /**
+     * Imports products from dummyjson.com when the form token and fields are valid, then redirects to the product
+     * list; otherwise shows why nothing or not everything was imported.
      *
      * @param array<string, mixed> $parameters The route parameters.
      * @param Request $request The request; its form fields are _token, count and offset.
      *
-     * @return Response A 303 redirect to the product list, or a 403 response when the token is not valid.
+     * @return Response A 303 redirect to the product list; the expired-form page with status 403 when the token is
+     *                  not valid; or the import page again with status 422 for invalid fields or 503 when the import
+     *                  failed.
+     * @throws TwigError The template could not be rendered.
+     * @throws \Random\RandomException No random source is available to create the form token.
      * @throws \RuntimeException The session could not be started.
      * @throws LogicException The request session does not support flash messages.
      */
@@ -134,25 +163,83 @@ final readonly class ProductController
     {
         $input = $request->request->all();
         if (!$this->csrfTokenManager->isValid($request->getSession(), $input['_token'] ?? null)) {
-            return new Response('Forbidden: the form has expired. Reload the product list and try again.', Response::HTTP_FORBIDDEN, [
-                'Content-Type' => 'text/plain; charset=UTF-8',
-            ]);
+            return $this->errorPage(
+                'This form has expired',
+                'The import form is no longer valid, so nothing was imported. Open the form again and submit it once more.',
+                ['label' => 'Open the import form again', 'href' => self::IMPORT_PATH, 'icon' => 'arrow-down-tray'],
+                Response::HTTP_FORBIDDEN,
+            );
         }
-
-        $flashBag = $this->flashBag($request);
 
         try {
-            $result = $this->productImporter->import(ImportRequest::fromInput($input));
-            $this->logSkippedProducts($result);
-            $flashBag->add(self::FLASH_SUCCESS, $this->describe($result));
+            $importRequest = ImportRequest::fromInput($input);
         } catch (InvalidImportRequest $exception) {
-            $flashBag->add(self::FLASH_ERROR, $exception->getMessage());
-        } catch (ImportFailed $exception) {
-            $this->logger->error('Product import failed: ' . $exception->getMessage() . ' ' . $exception->getPrevious()?->getMessage());
-            $flashBag->add(self::FLASH_ERROR, self::IMPORT_FAILED_MESSAGE);
+            return $this->importPage($request, $this->keptValues($input), $exception->fieldErrors(), null, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        try {
+            $result = $this->productImporter->import($importRequest);
+        } catch (ImportFailed $exception) {
+            $this->logger->error('Product import failed: ' . $exception->getMessage() . ' ' . $exception->getPrevious()?->getMessage());
+
+            return $this->importPage($request, $this->keptValues($input), [], self::IMPORT_FAILED_MESSAGE, Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
+        $this->logSkippedProducts($result);
+        $this->flashBag($request)->add(self::FLASH_SUCCESS, $this->describe($result));
+
         return new RedirectResponse(self::LIST_PATH, Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * @param array<string, string> $values
+     * @param array<string, string> $errors
+     */
+    private function importPage(Request $request, array $values, array $errors, ?string $failure, int $status): Response
+    {
+        return new Response($this->templateRenderer->render('products/import.html.twig', [
+            'values' => $values,
+            'errors' => $errors,
+            'failure' => $failure,
+            'csrfToken' => $this->csrfTokenManager->tokenFor($request->getSession()),
+            'limits' => [
+                'minCount' => ImportRequest::MIN_COUNT,
+                'maxCount' => ImportRequest::MAX_COUNT,
+                'minOffset' => ImportRequest::MIN_OFFSET,
+                'maxOffset' => ImportRequest::MAX_OFFSET,
+            ],
+            'activeNav' => self::NAV_IMPORT,
+        ]), $status);
+    }
+
+    /**
+     * @param array{label: string, href: string, icon: string} $action
+     */
+    private function errorPage(string $title, string $text, array $action, int $status): Response
+    {
+        return new Response($this->templateRenderer->render('error.html.twig', [
+            'title' => $title,
+            'text' => $text,
+            'action' => $action,
+            'activeNav' => null,
+        ]), $status);
+    }
+
+    /**
+     * Returns the submitted values to show again: short texts as entered, anything else as an empty field.
+     *
+     * @param array<string, mixed> $input
+     *
+     * @return array<string, string>
+     */
+    private function keptValues(array $input): array
+    {
+        $keep = static fn (mixed $value): string => is_string($value) && mb_strlen($value) <= self::MAX_KEPT_VALUE_LENGTH ? $value : '';
+
+        return [
+            ImportRequest::FIELD_COUNT => $keep($input[ImportRequest::FIELD_COUNT] ?? null),
+            ImportRequest::FIELD_OFFSET => $keep($input[ImportRequest::FIELD_OFFSET] ?? null),
+        ];
     }
 
     private function describe(ImportResult $result): string

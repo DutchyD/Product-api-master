@@ -14,6 +14,11 @@ product_show:
   requirements:
     id: '\d{1,10}'
 
+product_import_form:
+  path: /products/import
+  controller: MaxServ\App\Controller\ProductController::importForm
+  methods: [GET, HEAD]
+
 product_import:
   path: /products/import
   controller: MaxServ\App\Controller\ProductController::import

@@ -1,0 +1,7 @@
+{#
+    Product list links.
+
+    list(query): the /products URL for a query from ProductListRequest::queryWith() or sortQueryFor(),
+    with a "?" only when the query is not empty.
+#}
+{% macro list(query) %}/products{% if query is not empty %}?{{ query|url_encode }}{% endif %}{% endmacro %}

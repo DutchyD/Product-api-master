@@ -1,0 +1,33 @@
+{#
+    Inline SVG icons, decorative and hidden from assistive technology.
+    Path data from Heroicons 2.2.0 (MIT License, see heroicons-LICENSE.txt).
+
+    icon(name, classes): an outline icon (24 px grid, 1.5 px stroke) from the list below.
+    star(classes): the solid star used for ratings (20 px grid).
+    classes: complete Tailwind class names for size and colour, for example 'size-5 text-accent'.
+#}
+{% macro icon(name, classes = 'size-5') %}
+    {%- set paths = {
+        'arrow-down-tray': ['M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3'],
+        'arrow-right': ['M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3'],
+        'archive-box': ['m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z'],
+        'bars-arrow-down': ['M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25'],
+        'check': ['m4.5 12.75 6 6 9-13.5'],
+        'check-circle': ['M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+        'chevron-down': ['m19.5 8.25-7.5 7.5-7.5-7.5'],
+        'chevron-left': ['M15.75 19.5 8.25 12l7.5-7.5'],
+        'chevron-right': ['m8.25 4.5 7.5 7.5-7.5 7.5'],
+        'chevron-up': ['m4.5 15.75 7.5-7.5 7.5 7.5'],
+        'chevron-up-down': ['M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9'],
+        'exclamation-triangle': ['M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z'],
+        'funnel': ['M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z'],
+        'x-mark': ['M6 18 18 6M6 6l12 12'],
+    } -%}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="shrink-0 {{ classes }}" aria-hidden="true" focusable="false">
+        {%- for d in paths[name] %}<path stroke-linecap="round" stroke-linejoin="round" d="{{ d }}"/>{% endfor -%}
+    </svg>
+{%- endmacro %}
+
+{% macro star(classes = 'size-5') %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="shrink-0 {{ classes }}" aria-hidden="true" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z"/></svg>
+{%- endmacro %}

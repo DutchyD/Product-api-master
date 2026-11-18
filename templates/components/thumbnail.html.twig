@@ -1,0 +1,13 @@
+{#
+    A product image with the gradient ring.
+
+    thumbnail(url, alt, size): alt is '' for a decorative image next to the product's title.
+    size: 'small' (48 px, default) or 'medium' (64 px).
+#}
+{% macro thumbnail(url, alt, size = 'small') %}
+    {%- set sizes = { small: 'size-12', medium: 'size-16' } -%}
+    {%- set pixels = { small: 48, medium: 64 } -%}
+    <span class="inline-flex shrink-0 rounded-2xl bg-linear-to-br from-primary-from to-secondary-to p-0.5">
+        <img src="{{ url }}" alt="{{ alt }}" width="{{ pixels[size] }}" height="{{ pixels[size] }}" loading="lazy" referrerpolicy="no-referrer" class="{{ sizes[size] }} rounded-[0.875rem] bg-white object-contain">
+    </span>
+{%- endmacro %}

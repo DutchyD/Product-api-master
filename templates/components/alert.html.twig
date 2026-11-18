@@ -1,0 +1,29 @@
+{#
+    A success or error message box. Include it with `only`.
+
+    tone: 'success' (announced as a status message) or 'error' (announced as an alert).
+    title: an optional heading, shown as an h2.
+    messages: a list of texts, or of { text, href } for messages that link to a form field.
+#}
+{%- import 'components/icon.html.twig' as icons -%}
+{%- set isSuccess = tone == 'success' -%}
+<div role="{{ isSuccess ? 'status' : 'alert' }}" data-alert="{{ isSuccess ? 'success' : 'error' }}"
+    class="flex gap-3 rounded-2xl p-4 ring-1 {{ isSuccess ? 'bg-badge-success-bg text-badge-success-text ring-badge-success-text/30' : 'bg-badge-danger-bg text-badge-danger-text ring-badge-danger-text/30' }}">
+    {{- icons.icon(isSuccess ? 'check-circle' : 'exclamation-triangle', 'mt-0.5 size-5') -}}
+    <div class="flex flex-col gap-1 text-sm font-semibold">
+        {%- if title|default(null) %}
+            <h2 class="text-base font-bold">{{ title }}</h2>
+        {%- endif %}
+        <ul class="flex flex-col gap-1" role="list">
+            {%- for message in messages %}
+                <li>
+                    {%- if message.href is defined -%}
+                        <a href="{{ message.href }}" class="inline-flex min-h-6 items-center underline underline-offset-2">{{ message.text }}</a>
+                    {%- else -%}
+                        {{ message }}
+                    {%- endif -%}
+                </li>
+            {%- endfor %}
+        </ul>
+    </div>
+</div>

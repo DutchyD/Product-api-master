@@ -1,0 +1,15 @@
+{#
+    A small pill with a short label.
+
+    badge(label, tone, hiddenPrefix): tone is 'violet' (default; categories and tags), 'success', 'warning' or
+    'danger' (discounts and out of stock). hiddenPrefix: optional text read before the label by assistive technology.
+#}
+{% macro badge(label, tone = 'violet', hiddenPrefix = null) %}
+    {%- set tones = {
+        violet: 'bg-badge-violet-bg text-badge-violet-text',
+        success: 'bg-badge-success-bg text-badge-success-text',
+        warning: 'bg-badge-warning-bg text-badge-warning-text',
+        danger: 'bg-badge-danger-bg text-badge-danger-text',
+    } -%}
+    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap {{ tones[tone] }}">{% if hiddenPrefix %}<span class="sr-only">{{ hiddenPrefix }} </span>{% endif %}{{ label }}</span>
+{%- endmacro %}
