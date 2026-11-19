@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 final class IndexControllerTest extends TestCase
 {
     #[Test]
-    public function start_page_introduces_the_catalogue_with_links_to_the_products_and_the_import(): void
+    public function startPageIntroducesTheCatalogueWithLinksToTheProductsAndTheImport(): void
     {
         $response = Pages::indexController()->index();
         $page = Pages::parse($response);
@@ -30,7 +30,7 @@ final class IndexControllerTest extends TestCase
     }
 
     #[Test]
-    public function start_page_marks_no_navigation_link_as_current(): void
+    public function startPageMarksNoNavigationLinkAsCurrent(): void
     {
         $page = Pages::parse(Pages::indexController()->index());
 

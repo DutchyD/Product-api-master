@@ -42,7 +42,8 @@ final readonly class DummyJsonProductMapper
      * @param mixed $raw The decoded product from dummyjson.com.
      *
      * @return Product The product.
-     * @throws InvalidProductData The product is not an object, or a field is missing, has the wrong type, or is out of range.
+     * @throws InvalidProductData The product is not an object, or a field is missing, has the wrong type,
+     *                            or is out of range.
      */
     public function map(mixed $raw): Product
     {
@@ -158,7 +159,9 @@ final readonly class DummyJsonProductMapper
     {
         $value = $raw['description'] ?? null;
         if (!is_string($value) || strlen($value) > self::MAX_DESCRIPTION_BYTES) {
-            throw new InvalidProductData('description must be text of at most ' . self::MAX_DESCRIPTION_BYTES . ' bytes.');
+            throw new InvalidProductData(
+                'description must be text of at most ' . self::MAX_DESCRIPTION_BYTES . ' bytes.',
+            );
         }
 
         return $value;
@@ -218,7 +221,8 @@ final readonly class DummyJsonProductMapper
         $year = (int) $utcDate->format('Y');
         if ($year < self::MIN_STORABLE_YEAR || $year > self::MAX_STORABLE_YEAR) {
             throw new InvalidProductData(
-                "meta.$field must be in the years " . self::MIN_STORABLE_YEAR . ' to ' . self::MAX_STORABLE_YEAR . ' in UTC.'
+                "meta.$field must be in the years " . self::MIN_STORABLE_YEAR
+                    . ' to ' . self::MAX_STORABLE_YEAR . ' in UTC.',
             );
         }
 
@@ -245,7 +249,12 @@ final readonly class DummyJsonProductMapper
     private function tags(array $raw): array
     {
         $tags = $this->stringList($raw, 'tags');
-        if (array_any($tags, static fn (string $tag): bool => trim($tag) === '' || mb_strlen(trim($tag)) > self::MAX_TAG_LENGTH)) {
+        if (
+            array_any(
+                $tags,
+                static fn (string $tag): bool => trim($tag) === '' || mb_strlen(trim($tag)) > self::MAX_TAG_LENGTH,
+            )
+        ) {
             throw new InvalidProductData('tags must each be text of 1 to ' . self::MAX_TAG_LENGTH . ' characters.');
         }
 
@@ -281,8 +290,10 @@ final readonly class DummyJsonProductMapper
     private function stringList(array $raw, string $field): array
     {
         $value = $raw[$field] ?? null;
-        if (!is_array($value) || !array_is_list($value) || count($value) > self::MAX_LIST_ITEMS
-            || !array_all($value, static fn (mixed $item): bool => is_string($item))) {
+        if (
+            !is_array($value) || !array_is_list($value) || count($value) > self::MAX_LIST_ITEMS
+            || !array_all($value, static fn (mixed $item): bool => is_string($item))
+        ) {
             throw new InvalidProductData("$field must be a list of at most " . self::MAX_LIST_ITEMS . ' texts.');
         }
 

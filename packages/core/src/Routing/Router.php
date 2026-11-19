@@ -27,9 +27,9 @@ readonly class Router
      * @param Logger $logger Records failed requests.
      */
     public function __construct(
-        private Container     $container,
+        private Container $container,
         private SymfonyRouter $router,
-        private Logger        $logger,
+        private Logger $logger,
     ) {
     }
 

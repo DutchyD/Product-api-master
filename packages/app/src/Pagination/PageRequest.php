@@ -33,7 +33,9 @@ final readonly class PageRequest
         }
 
         if (!in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
-            throw new InvalidArgumentException('The number per page must be one of ' . implode(', ', self::PER_PAGE_OPTIONS) . '.');
+            throw new InvalidArgumentException(
+                'The number per page must be one of ' . implode(', ', self::PER_PAGE_OPTIONS) . '.',
+            );
         }
     }
 

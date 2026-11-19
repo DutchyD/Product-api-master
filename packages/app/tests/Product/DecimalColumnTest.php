@@ -29,14 +29,14 @@ final class DecimalColumnTest extends TestCase
 
     #[Test]
     #[DataProvider('centsAndDecimals')]
-    public function cents_are_formatted_with_two_decimals(int $cents, string $decimal): void
+    public function centsAreFormattedWithTwoDecimals(int $cents, string $decimal): void
     {
         self::assertSame($decimal, DecimalColumn::fromCents($cents));
     }
 
     #[Test]
     #[DataProvider('centsAndDecimals')]
-    public function decimal_is_read_back_as_the_same_cents(int $cents, string $decimal): void
+    public function decimalIsReadBackAsTheSameCents(int $cents, string $decimal): void
     {
         self::assertSame($cents, DecimalColumn::toCents($decimal));
     }
@@ -52,7 +52,7 @@ final class DecimalColumnTest extends TestCase
 
     #[Test]
     #[DataProvider('shortDecimals')]
-    public function decimal_with_fewer_than_two_decimals_is_read_as_cents(string $decimal, int $expectedCents): void
+    public function decimalWithFewerThanTwoDecimalsIsReadAsCents(string $decimal, int $expectedCents): void
     {
         self::assertSame($expectedCents, DecimalColumn::toCents($decimal));
     }
@@ -72,7 +72,7 @@ final class DecimalColumnTest extends TestCase
 
     #[Test]
     #[DataProvider('invalidDecimals')]
-    public function invalid_decimal_is_rejected(string $decimal): void
+    public function invalidDecimalIsRejected(string $decimal): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -80,7 +80,7 @@ final class DecimalColumnTest extends TestCase
     }
 
     #[Test]
-    public function negative_cents_are_rejected(): void
+    public function negativeCentsAreRejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -100,7 +100,7 @@ final class DecimalColumnTest extends TestCase
 
     #[Test]
     #[DataProvider('floatsAndDecimals')]
-    public function number_is_formatted_with_two_decimals_and_no_separators(float $value, string $decimal): void
+    public function numberIsFormattedWithTwoDecimalsAndNoSeparators(float $value, string $decimal): void
     {
         self::assertSame($decimal, DecimalColumn::fromFloat($value));
     }
@@ -117,7 +117,7 @@ final class DecimalColumnTest extends TestCase
 
     #[Test]
     #[DataProvider('invalidFloats')]
-    public function invalid_number_is_rejected(float $value): void
+    public function invalidNumberIsRejected(float $value): void
     {
         $this->expectException(InvalidArgumentException::class);
 

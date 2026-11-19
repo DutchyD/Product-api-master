@@ -44,7 +44,7 @@ use Psr\Http\Message\RequestInterface;
 final class ProductImporterTest extends TestCase
 {
     #[Test]
-    public function count_above_the_batch_size_is_fetched_in_batches(): void
+    public function countAboveTheBatchSizeIsFetchedInBatches(): void
     {
         $httpClient = new FakeHttpClient(
             DummyJson::pageResponse(194, DummyJson::products(1, 100)),
@@ -61,7 +61,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function last_batch_asks_only_for_the_remaining_products(): void
+    public function lastBatchAsksOnlyForTheRemainingProducts(): void
     {
         $httpClient = new FakeHttpClient(
             DummyJson::pageResponse(194, DummyJson::products(11, 100)),
@@ -75,7 +75,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function import_stops_when_the_source_runs_out(): void
+    public function importStopsWhenTheSourceRunsOut(): void
     {
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, DummyJson::products(151, 44)));
         $repository = new InMemoryProductRepository();
@@ -88,7 +88,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function import_stops_without_another_request_when_the_source_ends_on_a_batch_boundary(): void
+    public function importStopsWithoutAnotherRequestWhenTheSourceEndsOnABatchBoundary(): void
     {
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, DummyJson::products(95, 100)));
 
@@ -99,7 +99,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function offset_past_the_last_product_imports_nothing(): void
+    public function offsetPastTheLastProductImportsNothing(): void
     {
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, []));
         $repository = new InMemoryProductRepository();
@@ -113,7 +113,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function invalid_products_are_skipped_and_valid_ones_stored(): void
+    public function invalidProductsAreSkippedAndValidOnesStored(): void
     {
         $products = DummyJson::products(1, 3);
         $products[1]['price'] = 'free';
@@ -129,7 +129,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function entry_that_is_not_an_object_is_skipped_and_the_rest_stored(): void
+    public function entryThatIsNotAnObjectIsSkippedAndTheRestStored(): void
     {
         $products = DummyJson::products(1, 3);
         $products[1] = null;
@@ -144,7 +144,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function more_products_than_asked_are_ignored(): void
+    public function moreProductsThanAskedAreIgnored(): void
     {
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, DummyJson::products(1, 5)));
         $repository = new InMemoryProductRepository();
@@ -156,7 +156,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function failed_fetch_keeps_the_batches_stored_before_it(): void
+    public function failedFetchKeepsTheBatchesStoredBeforeIt(): void
     {
         $httpClient = new FakeHttpClient(
             DummyJson::pageResponse(194, DummyJson::products(1, 100)),
@@ -173,7 +173,7 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function invalid_response_fails_the_import(): void
+    public function invalidResponseFailsTheImport(): void
     {
         $httpClient = new FakeHttpClient(new Response(503));
 
@@ -183,14 +183,17 @@ final class ProductImporterTest extends TestCase
     }
 
     #[Test]
-    public function database_failure_fails_the_import(): void
+    public function databaseFailureFailsTheImport(): void
     {
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, DummyJson::products(1, 10)));
 
         $this->expectException(ImportFailed::class);
         $this->expectExceptionMessage('The imported products could not be stored.');
 
-        (void) self::importer($httpClient, new InMemoryProductRepository(failOnSaveCall: 1))->import(new ImportRequest(10, 0));
+        (void) self::importer(
+            $httpClient,
+            new InMemoryProductRepository(failOnSaveCall: 1),
+        )->import(new ImportRequest(10, 0));
     }
 
     private static function importer(FakeHttpClient $httpClient, InMemoryProductRepository $repository): ProductImporter

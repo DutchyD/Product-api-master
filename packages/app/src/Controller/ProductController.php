@@ -102,9 +102,10 @@ final readonly class ProductController
     public function show(array $parameters, Request $request): Response
     {
         $id = $parameters['id'] ?? null;
-        $product = is_string($id) && preg_match(self::MAX_ID_DIGITS_PATTERN, $id) === 1 && (int) $id <= self::MAX_PRODUCT_ID
-            ? $this->productRepository->findById((int) $id)
-            : null;
+        $isStorableId = is_string($id)
+            && preg_match(self::MAX_ID_DIGITS_PATTERN, $id) === 1
+            && (int) $id <= self::MAX_PRODUCT_ID;
+        $product = $isStorableId ? $this->productRepository->findById((int) $id) : null;
 
         if ($product === null) {
             return $this->errorPage(
@@ -137,7 +138,10 @@ final readonly class ProductController
     {
         return $this->importPage(
             $request,
-            [ImportRequest::FIELD_COUNT => self::DEFAULT_IMPORT_COUNT, ImportRequest::FIELD_OFFSET => self::DEFAULT_IMPORT_OFFSET],
+            [
+                ImportRequest::FIELD_COUNT => self::DEFAULT_IMPORT_COUNT,
+                ImportRequest::FIELD_OFFSET => self::DEFAULT_IMPORT_OFFSET,
+            ],
             [],
             null,
             Response::HTTP_OK,
@@ -165,7 +169,8 @@ final readonly class ProductController
         if (!$this->csrfTokenManager->isValid($request->getSession(), $input['_token'] ?? null)) {
             return $this->errorPage(
                 'This form has expired',
-                'The import form is no longer valid, so nothing was imported. Open the form again and submit it once more.',
+                'The import form is no longer valid, so nothing was imported. '
+                    . 'Open the form again and submit it once more.',
                 ['label' => 'Open the import form again', 'href' => self::IMPORT_PATH, 'icon' => 'arrow-down-tray'],
                 Response::HTTP_FORBIDDEN,
             );
@@ -174,15 +179,29 @@ final readonly class ProductController
         try {
             $importRequest = ImportRequest::fromInput($input);
         } catch (InvalidImportRequest $exception) {
-            return $this->importPage($request, $this->keptValues($input), $exception->fieldErrors(), null, Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->importPage(
+                $request,
+                $this->keptValues($input),
+                $exception->fieldErrors(),
+                null,
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
         }
 
         try {
             $result = $this->productImporter->import($importRequest);
         } catch (ImportFailed $exception) {
-            $this->logger->error('Product import failed: ' . $exception->getMessage() . ' ' . $exception->getPrevious()?->getMessage());
+            $this->logger->error(
+                'Product import failed: ' . $exception->getMessage() . ' ' . $exception->getPrevious()?->getMessage(),
+            );
 
-            return $this->importPage($request, $this->keptValues($input), [], self::IMPORT_FAILED_MESSAGE, Response::HTTP_SERVICE_UNAVAILABLE);
+            return $this->importPage(
+                $request,
+                $this->keptValues($input),
+                [],
+                self::IMPORT_FAILED_MESSAGE,
+                Response::HTTP_SERVICE_UNAVAILABLE,
+            );
         }
 
         $this->logSkippedProducts($result);
@@ -234,7 +253,8 @@ final readonly class ProductController
      */
     private function keptValues(array $input): array
     {
-        $keep = static fn (mixed $value): string => is_string($value) && mb_strlen($value) <= self::MAX_KEPT_VALUE_LENGTH ? $value : '';
+        $keep = static fn (mixed $value): string =>
+            is_string($value) && mb_strlen($value) <= self::MAX_KEPT_VALUE_LENGTH ? $value : '';
 
         return [
             ImportRequest::FIELD_COUNT => $keep($input[ImportRequest::FIELD_COUNT] ?? null),
@@ -245,7 +265,8 @@ final readonly class ProductController
     private function describe(ImportResult $result): string
     {
         if ($result->offsetPastTotal) {
-            return "No products imported: the offset is past the last of the {$result->sourceTotal} dummyjson.com products.";
+            return 'No products imported: the offset is past the last of the '
+                . "{$result->sourceTotal} dummyjson.com products.";
         }
 
         return "Imported {$result->importedCount} products and skipped {$result->skippedCount()} with invalid data.";

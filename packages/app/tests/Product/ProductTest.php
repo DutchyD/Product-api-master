@@ -32,8 +32,11 @@ final class ProductTest extends TestCase
 
     #[Test]
     #[DataProvider('discountCases')]
-    public function discount_price_is_rounded_to_whole_cents_with_halves_up(float $price, float $discount, int $expectedCents): void
-    {
+    public function discountPriceIsRoundedToWholeCentsWithHalvesUp(
+        float $price,
+        float $discount,
+        int $expectedCents,
+    ): void {
         $product = self::product(['price' => $price, 'discountPercentage' => $discount]);
 
         $discountedCents = $product->discountedPriceInCents();
@@ -42,7 +45,7 @@ final class ProductTest extends TestCase
     }
 
     #[Test]
-    public function product_with_zero_discount_has_no_discount(): void
+    public function productWithZeroDiscountHasNoDiscount(): void
     {
         $product = self::product(['discountPercentage' => 0]);
 
@@ -50,7 +53,7 @@ final class ProductTest extends TestCase
     }
 
     #[Test]
-    public function product_with_small_discount_has_discount(): void
+    public function productWithSmallDiscountHasDiscount(): void
     {
         $product = self::product(['discountPercentage' => 0.04]);
 
@@ -58,7 +61,7 @@ final class ProductTest extends TestCase
     }
 
     #[Test]
-    public function display_prices_are_in_whole_units(): void
+    public function displayPricesAreInWholeUnits(): void
     {
         $product = self::product(['price' => 9.99, 'discountPercentage' => 10.48]);
 

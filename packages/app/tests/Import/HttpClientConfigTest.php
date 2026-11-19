@@ -26,7 +26,7 @@ final class HttpClientConfigTest extends TestCase
     private const int IMPORT_WALL_TIME_BUDGET_SECONDS = 30;
 
     #[Test]
-    public function client_streams_responses_so_the_size_limit_stops_the_download(): void
+    public function clientStreamsResponsesSoTheSizeLimitStopsTheDownload(): void
     {
         $options = self::clientOptions();
 
@@ -34,7 +34,7 @@ final class HttpClientConfigTest extends TestCase
     }
 
     #[Test]
-    public function client_does_not_follow_redirects_away_from_dummyjson(): void
+    public function clientDoesNotFollowRedirectsAwayFromDummyjson(): void
     {
         $options = self::clientOptions();
 
@@ -42,11 +42,14 @@ final class HttpClientConfigTest extends TestCase
     }
 
     #[Test]
-    public function slowest_import_stays_within_the_wall_time_budget(): void
+    public function slowestImportStaysWithinTheWallTimeBudget(): void
     {
         $options = self::clientOptions();
         $slowestFetch = DummyJsonProductClient::FETCH_TIME_LIMIT_SECONDS + $options['read_timeout'];
-        $fetchesPerImport = intdiv(ImportRequest::MAX_COUNT + ProductImporter::BATCH_SIZE - 1, ProductImporter::BATCH_SIZE);
+        $fetchesPerImport = intdiv(
+            ImportRequest::MAX_COUNT + ProductImporter::BATCH_SIZE - 1,
+            ProductImporter::BATCH_SIZE,
+        );
 
         self::assertLessThanOrEqual(self::IMPORT_WALL_TIME_BUDGET_SECONDS, $fetchesPerImport * $slowestFetch);
     }

@@ -80,7 +80,8 @@ final class InMemoryProductRepository implements ProductRepository
     {
         $matching = array_values(array_filter(
             $this->products,
-            static fn (Product $product): bool => ($listRequest->category === null || $product->category === $listRequest->category)
+            static fn (Product $product): bool =>
+                ($listRequest->category === null || $product->category === $listRequest->category)
                 && ($listRequest->brand === null || $product->brand === $listRequest->brand),
         ));
         usort($matching, static fn (Product $a, Product $b): int => self::compare($a, $b, $listRequest));
@@ -99,7 +100,10 @@ final class InMemoryProductRepository implements ProductRepository
     #[\Override]
     public function findFilterOptions(): FilterOptions
     {
-        $categories = array_values(array_unique(array_map(static fn (Product $product): string => $product->category, $this->products)));
+        $categories = array_values(array_unique(array_map(
+            static fn (Product $product): string => $product->category,
+            $this->products,
+        )));
         $brands = array_values(array_unique(array_filter(
             array_map(static fn (Product $product): ?string => $product->brand, $this->products),
             static fn (?string $brand): bool => $brand !== null,

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: &runner ubuntu-26.04
+    timeout-minutes: &timeout 10
+    steps:
+      - &checkout
+        name: Check out the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - &setup-php
+        name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.5'
+          tools: composer:2.11.2@sha256:dd158c0afd41d15fac89e1b4e47b5d42911fe316c3687cd5edac98319b25d028
+          coverage: none
+          extensions: dom, iconv, mbstring, pdo, simplexml, tokenizer, xmlwriter
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict --no-check-all --no-check-publish
+
+      - &install
+        name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Check the code style
+        run: composer lint
+
+  tests:
+    name: Tests
+    runs-on: *runner
+    timeout-minutes: *timeout
+    steps:
+      - *checkout
+      - *setup-php
+      - *install
+
+      - name: Run the tests
+        run: composer test
+
+  dependencies:
+    name: Dependencies
+    runs-on: *runner
+    timeout-minutes: *timeout
+    steps:
+      - *checkout
+      - *setup-php
+
+      - name: Audit the locked dependencies
+        run: composer audit --locked

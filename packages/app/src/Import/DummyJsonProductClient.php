@@ -109,7 +109,9 @@ final readonly class DummyJsonProductClient
         while (($chunk = $this->readChunk($body)) !== null) {
             $contents .= $chunk;
             if (strlen($contents) > self::MAX_RESPONSE_BYTES) {
-                throw new ImportFailed('The dummyjson.com response is larger than ' . self::MAX_RESPONSE_BYTES . ' bytes.');
+                throw new ImportFailed(
+                    'The dummyjson.com response is larger than ' . self::MAX_RESPONSE_BYTES . ' bytes.',
+                );
             }
 
             $this->checkDeadline($deadline);
@@ -121,7 +123,9 @@ final readonly class DummyJsonProductClient
     private function checkDeadline(int $deadline): void
     {
         if ($this->clock->nanoseconds() > $deadline) {
-            throw new ImportFailed('The dummyjson.com response took longer than ' . self::FETCH_TIME_LIMIT_SECONDS . ' seconds.');
+            throw new ImportFailed(
+                'The dummyjson.com response took longer than ' . self::FETCH_TIME_LIMIT_SECONDS . ' seconds.',
+            );
         }
     }
 

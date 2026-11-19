@@ -91,7 +91,11 @@ final readonly class Product
     #[\NoDiscard]
     public function discountedPriceInCents(): int
     {
-        $discountBasisPoints = (int) round($this->discountPercentage * self::BASIS_POINTS_PER_PERCENT, 0, RoundingMode::HalfAwayFromZero);
+        $discountBasisPoints = (int) round(
+            $this->discountPercentage * self::BASIS_POINTS_PER_PERCENT,
+            0,
+            RoundingMode::HalfAwayFromZero,
+        );
         $remainingBasisPoints = self::FULL_BASIS_POINTS - $discountBasisPoints;
         $halfUnit = intdiv(self::FULL_BASIS_POINTS, 2);
 

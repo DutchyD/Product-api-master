@@ -30,8 +30,12 @@ final readonly class ImportRequest
         public int $offset,
     ) {
         $fieldErrors = array_filter([
-            self::FIELD_COUNT => self::inRange($count, self::MIN_COUNT, self::MAX_COUNT) ? null : self::rangeMessage(self::MIN_COUNT, self::MAX_COUNT),
-            self::FIELD_OFFSET => self::inRange($offset, self::MIN_OFFSET, self::MAX_OFFSET) ? null : self::rangeMessage(self::MIN_OFFSET, self::MAX_OFFSET),
+            self::FIELD_COUNT => self::inRange($count, self::MIN_COUNT, self::MAX_COUNT)
+                ? null
+                : self::rangeMessage(self::MIN_COUNT, self::MAX_COUNT),
+            self::FIELD_OFFSET => self::inRange($offset, self::MIN_OFFSET, self::MAX_OFFSET)
+                ? null
+                : self::rangeMessage(self::MIN_OFFSET, self::MAX_OFFSET),
         ]);
 
         if ($fieldErrors !== []) {
@@ -45,7 +49,8 @@ final readonly class ImportRequest
      * @param array<string, mixed> $input The submitted form fields.
      *
      * @return self The import request.
-     * @throws InvalidImportRequest A field is missing, not a whole number, or out of range; it names every field that is.
+     * @throws InvalidImportRequest A field is missing, not a whole number, or out of range;
+     *                              it names every field that is.
      */
     public static function fromInput(array $input): self
     {
