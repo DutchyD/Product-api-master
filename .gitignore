@@ -32,6 +32,9 @@
 !/phpunit.xml.dist
 /.phpunit.cache
 
+# Lint
+!/phpcs.xml.dist
+
 # Docker
 !/Dockerfile
 !/docker-compose.yml
