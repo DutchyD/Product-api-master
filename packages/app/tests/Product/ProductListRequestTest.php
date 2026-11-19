@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 final class ProductListRequestTest extends TestCase
 {
     #[Test]
-    public function missing_query_shows_every_product_sorted_by_id(): void
+    public function missingQueryShowsEveryProductSortedById(): void
     {
         $request = ProductListRequest::fromQuery([]);
 
@@ -32,7 +32,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function valid_query_values_are_used(): void
+    public function validQueryValuesAreUsed(): void
     {
         $request = ProductListRequest::fromQuery([
             'category' => 'smartphones',
@@ -73,7 +73,7 @@ final class ProductListRequestTest extends TestCase
      */
     #[Test]
     #[DataProvider('invalidQueries')]
-    public function invalid_values_fall_back_to_no_filter_and_no_sorting(array $query): void
+    public function invalidValuesFallBackToNoFilterAndNoSorting(array $query): void
     {
         $request = ProductListRequest::fromQuery($query);
 
@@ -82,7 +82,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function unknown_direction_falls_back_to_ascending(): void
+    public function unknownDirectionFallsBackToAscending(): void
     {
         $request = ProductListRequest::fromQuery(['sort' => 'title', 'direction' => 'up']);
 
@@ -90,7 +90,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function direction_without_a_sort_column_is_ignored(): void
+    public function directionWithoutASortColumnIsIgnored(): void
     {
         $request = ProductListRequest::fromQuery(['direction' => 'desc']);
 
@@ -98,7 +98,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function filters_at_their_maximum_length_are_accepted(): void
+    public function filtersAtTheirMaximumLengthAreAccepted(): void
     {
         $request = ProductListRequest::fromQuery(['category' => str_repeat('é', 100), 'brand' => str_repeat('b', 255)]);
 
@@ -107,7 +107,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function query_leaves_out_default_values(): void
+    public function queryLeavesOutDefaultValues(): void
     {
         $request = new ProductListRequest();
 
@@ -115,20 +115,27 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function page_change_keeps_the_filters_sorting_and_page_size(): void
+    public function pageChangeKeepsTheFiltersSortingAndPageSize(): void
     {
         $request = self::filteredAndSorted();
 
         $query = $request->queryWith(['page' => 3]);
 
         self::assertSame(
-            ['category' => 'smartphones', 'brand' => 'Apple', 'sort' => 'price', 'direction' => 'desc', 'page' => 3, 'perPage' => 10],
+            [
+                'category' => 'smartphones',
+                'brand' => 'Apple',
+                'sort' => 'price',
+                'direction' => 'desc',
+                'page' => 3,
+                'perPage' => 10,
+            ],
             $query,
         );
     }
 
     #[Test]
-    public function other_changes_start_again_at_page_one(): void
+    public function otherChangesStartAgainAtPageOne(): void
     {
         $request = self::filteredAndSorted();
 
@@ -139,7 +146,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function clearing_the_filters_keeps_the_sorting(): void
+    public function clearingTheFiltersKeepsTheSorting(): void
     {
         $request = self::filteredAndSorted();
 
@@ -149,7 +156,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function header_of_another_column_sorts_it_ascending(): void
+    public function headerOfAnotherColumnSortsItAscending(): void
     {
         $request = self::filteredAndSorted();
 
@@ -159,7 +166,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function header_of_the_sorted_column_reverses_it(): void
+    public function headerOfTheSortedColumnReversesIt(): void
     {
         $descending = self::filteredAndSorted();
         $ascending = new ProductListRequest(sortColumn: SortColumn::Price);
@@ -169,7 +176,7 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function only_the_sorted_column_has_a_direction(): void
+    public function onlyTheSortedColumnHasADirection(): void
     {
         $request = self::filteredAndSorted();
 
@@ -178,14 +185,14 @@ final class ProductListRequestTest extends TestCase
     }
 
     #[Test]
-    public function opposite_direction_reverses(): void
+    public function oppositeDirectionReverses(): void
     {
         self::assertSame(SortDirection::Descending, SortDirection::Ascending->opposite());
         self::assertSame(SortDirection::Ascending, SortDirection::Descending->opposite());
     }
 
     #[Test]
-    public function with_page_request_keeps_everything_else(): void
+    public function withPageRequestKeepsEverythingElse(): void
     {
         $request = self::filteredAndSorted();
 

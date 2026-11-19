@@ -13,7 +13,8 @@ final readonly class DummyJsonPage
      * Creates the page.
      *
      * @param int $total The number of products dummyjson.com has in total.
-     * @param list<mixed> $products The raw products on this page, not validated yet; an entry may not even be an object.
+     * @param list<mixed> $products The raw products on this page, not validated yet;
+     *                              an entry may not even be an object.
      */
     public function __construct(
         public int $total,

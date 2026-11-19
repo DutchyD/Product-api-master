@@ -16,4 +16,10 @@
     <arg value="sp"/>
 
     <rule ref="PSR12"/>
+
+    <!-- Entry scripts must define APPLICATION_ROOT before they run the bootstrap. -->
+    <rule ref="PSR1.Files.SideEffects">
+        <exclude-pattern>*/public/index\.php$</exclude-pattern>
+        <exclude-pattern>*/bin/migrate$</exclude-pattern>
+    </rule>
 </ruleset>

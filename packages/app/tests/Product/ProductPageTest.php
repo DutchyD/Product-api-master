@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 final class ProductPageTest extends TestCase
 {
     #[Test]
-    public function first_page_has_no_previous_page(): void
+    public function firstPageHasNoPreviousPage(): void
     {
         $page = new ProductPage([], new ProductListRequest(new PageRequest(1, 10)), 30);
 
@@ -35,7 +35,7 @@ final class ProductPageTest extends TestCase
     }
 
     #[Test]
-    public function middle_page_has_previous_and_next_pages(): void
+    public function middlePageHasPreviousAndNextPages(): void
     {
         $page = new ProductPage([], new ProductListRequest(new PageRequest(2, 10)), 30);
 
@@ -44,7 +44,7 @@ final class ProductPageTest extends TestCase
     }
 
     #[Test]
-    public function last_page_has_no_next_page(): void
+    public function lastPageHasNoNextPage(): void
     {
         $page = new ProductPage([], new ProductListRequest(new PageRequest(3, 10)), 30);
 
@@ -54,7 +54,7 @@ final class ProductPageTest extends TestCase
     }
 
     #[Test]
-    public function empty_list_has_one_page_without_neighbours(): void
+    public function emptyListHasOnePageWithoutNeighbours(): void
     {
         $page = new ProductPage([], new ProductListRequest(new PageRequest()), 0);
 
@@ -64,7 +64,7 @@ final class ProductPageTest extends TestCase
     }
 
     #[Test]
-    public function positions_count_from_the_first_product_of_the_page(): void
+    public function positionsCountFromTheFirstProductOfThePage(): void
     {
         $page = new ProductPage(self::products(10), new ProductListRequest(new PageRequest(2, 10)), 25);
 
@@ -73,7 +73,7 @@ final class ProductPageTest extends TestCase
     }
 
     #[Test]
-    public function positions_on_a_short_last_page_end_at_the_last_product(): void
+    public function positionsOnAShortLastPageEndAtTheLastProduct(): void
     {
         $page = new ProductPage(self::products(5), new ProductListRequest(new PageRequest(3, 10)), 25);
 
@@ -82,7 +82,7 @@ final class ProductPageTest extends TestCase
     }
 
     #[Test]
-    public function positions_of_an_empty_page_are_zero(): void
+    public function positionsOfAnEmptyPageAreZero(): void
     {
         $page = new ProductPage([], new ProductListRequest(), 0);
 
@@ -112,8 +112,11 @@ final class ProductPageTest extends TestCase
      */
     #[Test]
     #[DataProvider('pageLinkCases')]
-    public function page_links_show_the_first_last_and_neighbouring_pages(int $totalProducts, int $currentPage, array $expectedLinks): void
-    {
+    public function pageLinksShowTheFirstLastAndNeighbouringPages(
+        int $totalProducts,
+        int $currentPage,
+        array $expectedLinks,
+    ): void {
         $page = new ProductPage([], new ProductListRequest(new PageRequest($currentPage, 10)), $totalProducts);
 
         self::assertSame($expectedLinks, $page->pageLinks());

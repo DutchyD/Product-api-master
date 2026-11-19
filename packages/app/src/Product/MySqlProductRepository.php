@@ -20,10 +20,10 @@ final readonly class MySqlProductRepository implements ProductRepository
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s.v';
     private const string TIME_ZONE = 'UTC';
 
-    private const string PRODUCT_COLUMNS = 'id, title, description, category, price, discount_percentage, rating, stock, '
-        . 'brand, sku, weight, width, height, depth, warranty_information, shipping_information, availability_status, '
-        . 'return_policy, minimum_order_quantity, barcode, qr_code_url, thumbnail_url, source_created_at, '
-        . 'source_updated_at';
+    private const string PRODUCT_COLUMNS = 'id, title, description, category, price, discount_percentage, rating, '
+        . 'stock, brand, sku, weight, width, height, depth, warranty_information, shipping_information, '
+        . 'availability_status, return_policy, minimum_order_quantity, barcode, qr_code_url, thumbnail_url, '
+        . 'source_created_at, source_updated_at';
 
     private const string UPSERT_PRODUCT = 'INSERT INTO products (' . self::PRODUCT_COLUMNS . ', imported_at) VALUES ('
         . ':id, :title, :description, :category, :price, :discount_percentage, :rating, :stock, :brand, :sku, '
@@ -299,7 +299,11 @@ final readonly class MySqlProductRepository implements ProductRepository
         $images = $this->loadChildren('product_images', 'url', $productIds);
 
         return array_map(
-            fn (array $row): Product => $this->toProduct($row, $tags[(int) $row['id']] ?? [], $images[(int) $row['id']] ?? []),
+            fn (array $row): Product => $this->toProduct(
+                $row,
+                $tags[(int) $row['id']] ?? [],
+                $images[(int) $row['id']] ?? [],
+            ),
             $rows,
         );
     }

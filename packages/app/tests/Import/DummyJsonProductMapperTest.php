@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 final class DummyJsonProductMapperTest extends TestCase
 {
     #[Test]
-    public function valid_product_maps_every_field(): void
+    public function validProductMapsEveryField(): void
     {
         $product = new DummyJsonProductMapper()->map(DummyJson::product(7));
 
@@ -57,7 +57,7 @@ final class DummyJsonProductMapperTest extends TestCase
     }
 
     #[Test]
-    public function missing_brand_maps_to_null(): void
+    public function missingBrandMapsToNull(): void
     {
         $raw = DummyJson::product();
         unset($raw['brand']);
@@ -68,7 +68,7 @@ final class DummyJsonProductMapperTest extends TestCase
     }
 
     #[Test]
-    public function empty_brand_maps_to_null(): void
+    public function emptyBrandMapsToNull(): void
     {
         $product = new DummyJsonProductMapper()->map(DummyJson::product(overrides: ['brand' => '']));
 
@@ -76,7 +76,7 @@ final class DummyJsonProductMapperTest extends TestCase
     }
 
     #[Test]
-    public function dates_with_an_offset_are_converted_to_utc(): void
+    public function datesWithAnOffsetAreConvertedToUtc(): void
     {
         $raw = DummyJson::product();
         $raw['meta']['createdAt'] = '2025-10-09T16:47:01+02:00';
@@ -87,7 +87,7 @@ final class DummyJsonProductMapperTest extends TestCase
     }
 
     #[Test]
-    public function dates_at_the_edges_of_the_storable_years_are_accepted(): void
+    public function datesAtTheEdgesOfTheStorableYearsAreAccepted(): void
     {
         $raw = DummyJson::product();
         $raw['meta']['createdAt'] = '1000-01-01T00:00:00Z';
@@ -100,15 +100,17 @@ final class DummyJsonProductMapperTest extends TestCase
     }
 
     #[Test]
-    public function tags_are_trimmed_and_duplicates_removed_in_order(): void
+    public function tagsAreTrimmedAndDuplicatesRemovedInOrder(): void
     {
-        $product = new DummyJsonProductMapper()->map(DummyJson::product(overrides: ['tags' => [' beauty', 'mascara', 'beauty ']]));
+        $product = new DummyJsonProductMapper()->map(
+            DummyJson::product(overrides: ['tags' => [' beauty', 'mascara', 'beauty ']]),
+        );
 
         self::assertSame(['beauty', 'mascara'], $product->tags);
     }
 
     #[Test]
-    public function price_is_converted_to_cents_without_float_errors(): void
+    public function priceIsConvertedToCentsWithoutFloatErrors(): void
     {
         $product = new DummyJsonProductMapper()->map(DummyJson::product(overrides: ['price' => 0.29]));
 
@@ -168,7 +170,7 @@ final class DummyJsonProductMapperTest extends TestCase
      */
     #[Test]
     #[DataProvider('invalidFields')]
-    public function product_with_an_invalid_field_is_rejected(array $overrides): void
+    public function productWithAnInvalidFieldIsRejected(array $overrides): void
     {
         $this->expectException(InvalidProductData::class);
 
@@ -191,7 +193,7 @@ final class DummyJsonProductMapperTest extends TestCase
 
     #[Test]
     #[DataProvider('invalidMetaFields')]
-    public function product_with_an_invalid_meta_field_is_rejected(string $field, mixed $value): void
+    public function productWithAnInvalidMetaFieldIsRejected(string $field, mixed $value): void
     {
         $raw = DummyJson::product();
         $raw['meta'][$field] = $value;
@@ -213,7 +215,7 @@ final class DummyJsonProductMapperTest extends TestCase
 
     #[Test]
     #[DataProvider('nonObjects')]
-    public function entry_that_is_not_an_object_is_rejected(mixed $raw): void
+    public function entryThatIsNotAnObjectIsRejected(mixed $raw): void
     {
         $this->expectException(InvalidProductData::class);
         $this->expectExceptionMessage('product must be an object.');
@@ -222,7 +224,7 @@ final class DummyJsonProductMapperTest extends TestCase
     }
 
     #[Test]
-    public function rejection_names_the_product_and_the_field(): void
+    public function rejectionNamesTheProductAndTheField(): void
     {
         $this->expectExceptionMessage('Product 3: title must be text of 1 to 255 characters.');
 

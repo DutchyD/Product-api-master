@@ -100,7 +100,9 @@ final readonly class MigrationRunner
             throw new MigrationFailed("Migration $version failed: {$exception->getMessage()}", previous: $exception);
         }
 
-        $record = $this->pdo->prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (:version, :applied_at)');
+        $record = $this->pdo->prepare(
+            'INSERT INTO schema_migrations (version, applied_at) VALUES (:version, :applied_at)',
+        );
         $record->execute([
             'version' => $version,
             'applied_at' => new DateTimeImmutable('now', new DateTimeZone('UTC'))->format('Y-m-d H:i:s.v'),

@@ -9,7 +9,7 @@ The foundation's structure is kept. `public/index.php` is unchanged, the applica
 | Priority | Criterion | Implementation |
 | --- | --- | --- |
 | Must | Built on the supplied foundation | The foundation's entry point, bootstrap, container, router, connection and template renderer are kept and extended. See [Architecture](#architecture). |
-| Must | `composer.json` holds the dependencies and the autoloading of the code | The runtime dependencies are unchanged. The code autoloads through the `maxserv/core` and `maxserv/app` path packages (PSR-4). PHPUnit is a development dependency, and `autoload-dev` maps both test namespaces. |
+| Must | `composer.json` holds the dependencies and the autoloading of the code | The runtime dependencies are unchanged. The code autoloads through the `maxserv/core` and `maxserv/app` path packages (PSR-4). PHPUnit and PHP_CodeSniffer are development dependencies, and `autoload-dev` maps both test namespaces. |
 | Must | The application starts with `docker compose up` | A one-shot `migrate` service creates the database tables and a one-shot `assets` service builds the stylesheet before the `app` service starts. See [Getting started](#getting-started). |
 | Must | The Apache document root is `/var/www/html/public` | Set through `APACHE_DOCUMENT_ROOT` in the `Dockerfile`, which also sends every path that does not match a file in `public` to `public/index.php`. |
 | Must | A database table stores product information | `products`, with `product_tags` and `product_images`. See [Database](#database). |
@@ -234,6 +234,7 @@ Each file holds one SQL statement that is safe to run again, such as `CREATE TAB
 - **Error handling:** error responses contain no internal details. The router's 404, 405 and 500 responses are plain text, and the application's not-found and expired-form pages show only a short explanation. Causes are written to the PHP error log, without request bodies.
 - **Personal data:** reviews, which contain reviewer names and email addresses, are never requested from dummyjson.com or stored. The font is served by the application, so no font service learns who visits.
 - **Build tooling:** the Tailwind CSS command line tool is downloaded at a fixed version and checked against its published SHA-256 checksum before the image is built. It reads the project read-only and writes only the stylesheet volume.
+- **Continuous integration:** the workflow has read-only repository access and no secrets, pins its actions to commit SHAs, and checks Composer against its checksum. See [Continuous integration](#continuous-integration).
 
 There is no authentication: anyone who can reach the application can view the products and run an import. This suits a local application that only stores public data.
 
@@ -247,13 +248,33 @@ The code uses the features of PHP 8.4 and 8.5 where they fit:
 No deprecated PHP, MySQL or PHPUnit construct is used. Examples are the `PDO::MYSQL_ATTR_*` constants, `VALUES()` in upserts, `SQL_CALC_FOUND_ROWS`, the `utf8` charset alias, and PHPUnit doc-comment annotations. The test suite fails on any deprecation, including deprecations that libraries suppress.
 
 ## Testing
-Run `vendor/bin/phpunit` to run the unit tests of both packages. The tests use no network and no database: the HTTP client, the repository and the clock are replaced by in-memory fakes. A test that triggers a deprecation, notice or warning fails, and the tests run in random order.
+Run `composer test` to run the unit tests of both packages. Test methods have camelCase names that state the behaviour, such as `priceSortUsesTheDiscountPrice`. The tests use no network and no database: the HTTP client, the repository and the clock are replaced by in-memory fakes. A test that triggers a deprecation, notice or warning fails, and the tests run in random order.
 
 The tests cover the model and its price calculation, the decimal conversion, pagination, the list's query parameters and links, the import request and its field errors, the mapper's validation, the client's limits and failures, the importer's batching, the CSRF token, the router, and the controllers with their real templates.
 
 The page tests render every page and state with the real templates and check the accessibility rules that markup can show: the language, title, single `h1`, landmarks and skip link; headings in order; a label for every field, and descriptions and labels that point at existing elements; unique ids; alternative text on every image and a name on every link and button; the absence of scripts, event-handler attributes, `style` attributes and `<style>` elements; and that the markup parses without HTML5 tree errors. The controller tests check the error and current-state attributes, such as `aria-invalid`, `aria-current` and `aria-sort`. Tests find products and controls by `data-` attributes and accessible names, not by styling classes, so restyling does not break them.
 
 The SQL of the MySQL repository and the migration runner need a real database, and colour contrast, layout at each width, zoom and keyboard use need a browser. They are checked by running the application in Docker.
+
+## Linting
+Run `composer lint` to check the code style. It runs PHP_CodeSniffer with the PSR-12 standard, configured in `phpcs.xml.dist`, over `bin/migrate`, `public/index.php`, and the `src` and `tests` folders of both packages.
+
+The code has no errors and no warnings, and the command fails on any error or warning. Methods, including test methods, have camelCase names, and lines are at most 120 characters long. `vendor/bin/phpcbf` fixes the violations that can be fixed automatically, such as spacing and missing final newlines.
+
+PSR-1's side-effects rule is switched off for exactly two files: `public/index.php` and `bin/migrate`. Each must define `APPLICATION_ROOT` before it runs the bootstrap, so each both declares a symbol and runs code, which is what entry scripts do; `public/index.php` also stays as the foundation provides it.
+
+## Continuous integration
+A GitHub Actions workflow, `.github/workflows/ci.yml`, runs on every push to `main` and on every pull request. It uses Ubuntu 26.04, PHP 8.5 and Composer 2.11.2. A new run for the same pull request cancels the one still running, while every push to `main` gets a complete run. It has three jobs, each reported as its own check:
+
+| Check | What it runs | It fails when |
+| --- | --- | --- |
+| Lint | `composer validate --strict --no-check-all --no-check-publish`, then `composer install` and `composer lint` | `composer.json` is invalid or `composer.lock` is out of date, or PHP_CodeSniffer reports any error or warning |
+| Tests | `composer install` and `composer test` | A test fails, or triggers a deprecation, notice or warning |
+| Dependencies | `composer audit --locked` | A locked package has a known security advisory or is abandoned |
+
+`composer validate` skips two checks: unbounded or overly strict version constraints, because the local `maxserv/core` and `maxserv/app` packages are required with `*`; and suitability for publishing on Packagist, because the project is an application, not a published package. Every other warning fails the check.
+
+The workflow gets read-only access to the repository and no secrets. The checkout does not keep the access token, every action is pinned to a full commit SHA with its version noted next to it, Composer is pinned to a version and checked against its SHA-256 checksum, and each job stops after 10 minutes. The runner, the time limit and the setup steps are defined once and reused by every job, so the three checks always run in the same environment.
 
 ## Design decisions
 - **Normalized tags and images:** separate tables keep tags and images in order and queryable, at the cost of a little more mapping code than JSON columns.
@@ -262,12 +283,14 @@ The SQL of the MySQL repository and the migration runner need a real database, a
 - **A separate import page:** the product list stays focused on browsing, and the form can show errors next to its fields with the entered values kept. The CSRF token and the limits cover the main risk of an HTTP endpoint.
 - **A streamed HTTP client with its own time limit:** streaming lets the 2 MiB limit stop the download, and an injected clock makes the time limit testable.
 - **A small migration runner:** three SQL files do not need a migration library. The runner uses the foundation's Finder and PDO.
-- **No new runtime dependencies:** the PHP code is built on the packages the foundation provides, and PHPUnit is the only Composer addition, for development. The Tailwind CSS tool runs only when the stylesheet is built, and the font and the icons are files kept in the project.
+- **No new runtime dependencies:** the PHP code is built on the packages the foundation provides, and PHPUnit and PHP_CodeSniffer are the only Composer additions, both for development. The Tailwind CSS tool runs only when the stylesheet is built, and the font and the icons are files kept in the project.
 - **Tailwind CSS through its standalone tool:** the official binary builds the stylesheet without adding Node.js and its packages to the project, and a checksum pins exactly what runs.
 - **The stylesheet in a Docker volume:** building it on every start keeps it in step with the templates, and keeping it out of the project folder avoids committing generated files and root-owned files on Linux hosts.
 - **A table on larger screens and cards on phones:** the table makes products easy to compare and sorts by its column headers; cards keep phones free of sideways scrolling. Both are rendered from the same components, and only one is shown at a time, so assistive technology meets each product once.
 - **No JavaScript:** links and forms do everything the pages need, so they work in every browser and with every assistive technology, and there is no script to secure.
 - **A self-hosted font:** it avoids sending visitors' addresses to a font service.
+- **PSR-12 with a single exception:** the whole code base, tests included, follows PSR-12, so one tool and one rule set apply everywhere. Only the two entry scripts are exempt from the side-effects rule, because they have to define the application root before they run.
+- **Actions and Composer pinned:** a tag can be moved to other code, but a commit SHA cannot, and a Composer download whose checksum does not match is refused. A CI run therefore always executes the reviewed tool code, and a new tool release cannot change a check's result without a change in the repository.
 
 ## Limitations
 - There is no authentication or rate limiting beyond the import limits.

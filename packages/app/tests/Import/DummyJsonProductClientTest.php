@@ -26,7 +26,7 @@ use RuntimeException;
 final class DummyJsonProductClientTest extends TestCase
 {
     #[Test]
-    public function request_asks_for_the_page_and_the_stored_fields_only(): void
+    public function requestAsksForThePageAndTheStoredFieldsOnly(): void
     {
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, []));
 
@@ -46,7 +46,7 @@ final class DummyJsonProductClientTest extends TestCase
     }
 
     #[Test]
-    public function page_holds_the_total_and_raw_products(): void
+    public function pageHoldsTheTotalAndRawProducts(): void
     {
         $products = DummyJson::products(1, 2);
         $httpClient = new FakeHttpClient(DummyJson::pageResponse(194, $products));
@@ -58,7 +58,7 @@ final class DummyJsonProductClientTest extends TestCase
     }
 
     #[Test]
-    public function entries_that_are_not_objects_are_passed_on_for_the_importer_to_skip(): void
+    public function entriesThatAreNotObjectsArePassedOnForTheImporterToSkip(): void
     {
         $httpClient = new FakeHttpClient(new Response(200, [], '{"total": 3, "products": [{"id": 1}, null, 7]}'));
 
@@ -68,7 +68,7 @@ final class DummyJsonProductClientTest extends TestCase
     }
 
     #[Test]
-    public function transport_failure_fails_the_fetch(): void
+    public function transportFailureFailsTheFetch(): void
     {
         $httpClient = new FakeHttpClient(new FakeClientException('Connection timed out.'));
 
@@ -91,12 +91,16 @@ final class DummyJsonProductClientTest extends TestCase
         yield 'total as text' => [new Response(200, [], '{"total": "5", "products": []}')];
         yield 'negative total' => [new Response(200, [], '{"total": -1, "products": []}')];
         yield 'products not a list' => [new Response(200, [], '{"total": 1, "products": {"a": {}}}')];
-        yield 'body too large' => [new Response(200, [], '{"total": 0, "products": [], "padding": "' . str_repeat('a', 2 * 1024 * 1024) . '"}')];
+        yield 'body too large' => [new Response(
+            200,
+            [],
+            '{"total": 0, "products": [], "padding": "' . str_repeat('a', 2 * 1024 * 1024) . '"}',
+        )];
     }
 
     #[Test]
     #[DataProvider('invalidResponses')]
-    public function invalid_response_fails_the_fetch(Response $response): void
+    public function invalidResponseFailsTheFetch(Response $response): void
     {
         $this->expectException(ImportFailed::class);
 
@@ -104,7 +108,7 @@ final class DummyJsonProductClientTest extends TestCase
     }
 
     #[Test]
-    public function failure_while_reading_the_body_fails_the_fetch_and_closes_the_body(): void
+    public function failureWhileReadingTheBodyFailsTheFetchAndClosesTheBody(): void
     {
         $closed = false;
         $body = FnStream::decorate(new HttpFactory()->createStream('{"total": 1, '), [
@@ -125,7 +129,7 @@ final class DummyJsonProductClientTest extends TestCase
     }
 
     #[Test]
-    public function error_status_closes_the_body(): void
+    public function errorStatusClosesTheBody(): void
     {
         $closed = false;
         $body = FnStream::decorate(new HttpFactory()->createStream(''), [
@@ -144,12 +148,16 @@ final class DummyJsonProductClientTest extends TestCase
     }
 
     #[Test]
-    public function body_that_takes_longer_than_the_time_limit_fails_the_fetch(): void
+    public function bodyThatTakesLongerThanTheTimeLimitFailsTheFetch(): void
     {
         $halfTheLimit = DummyJsonProductClient::FETCH_TIME_LIMIT_SECONDS * 1_000_000_000 / 2;
         $largeBody = '{"total": 0, "products": [], "padding": "' . str_repeat('a', 100_000) . '"}';
         $httpClient = new FakeHttpClient(new Response(200, [], $largeBody));
-        $client = new DummyJsonProductClient($httpClient, new HttpFactory(), new SteppingClock((int) $halfTheLimit + 1));
+        $client = new DummyJsonProductClient(
+            $httpClient,
+            new HttpFactory(),
+            new SteppingClock((int) $halfTheLimit + 1),
+        );
 
         $this->expectException(ImportFailed::class);
         $this->expectExceptionMessage('The dummyjson.com response took longer than 8 seconds.');

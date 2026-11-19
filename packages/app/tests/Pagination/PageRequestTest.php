@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 final class PageRequestTest extends TestCase
 {
     #[Test]
-    public function missing_query_uses_the_defaults(): void
+    public function missingQueryUsesTheDefaults(): void
     {
         $request = PageRequest::fromQuery([]);
 
@@ -24,7 +24,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function valid_query_values_are_used(): void
+    public function validQueryValuesAreUsed(): void
     {
         $request = PageRequest::fromQuery(['page' => '3', 'perPage' => '50']);
 
@@ -49,7 +49,7 @@ final class PageRequestTest extends TestCase
 
     #[Test]
     #[DataProvider('invalidPageValues')]
-    public function invalid_page_falls_back_to_page_one(mixed $page): void
+    public function invalidPageFallsBackToPageOne(mixed $page): void
     {
         $request = PageRequest::fromQuery(['page' => $page]);
 
@@ -70,7 +70,7 @@ final class PageRequestTest extends TestCase
 
     #[Test]
     #[DataProvider('invalidPerPageValues')]
-    public function invalid_per_page_falls_back_to_twenty(mixed $perPage): void
+    public function invalidPerPageFallsBackToTwenty(mixed $perPage): void
     {
         $request = PageRequest::fromQuery(['perPage' => $perPage]);
 
@@ -78,7 +78,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function offset_counts_the_items_on_earlier_pages(): void
+    public function offsetCountsTheItemsOnEarlierPages(): void
     {
         $request = new PageRequest(3, 10);
 
@@ -86,7 +86,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function with_page_returns_a_copy_for_the_other_page(): void
+    public function withPageReturnsACopyForTheOtherPage(): void
     {
         $request = new PageRequest(3, 50);
 
@@ -98,7 +98,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function with_page_rejects_page_zero(): void
+    public function withPageRejectsPageZero(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -106,7 +106,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function constructor_rejects_a_per_page_value_that_is_not_an_option(): void
+    public function constructorRejectsAPerPageValueThatIsNotAnOption(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -126,7 +126,7 @@ final class PageRequestTest extends TestCase
 
     #[Test]
     #[DataProvider('lastPageCases')]
-    public function last_page_covers_every_item(int $totalItems, int $perPage, int $expectedLastPage): void
+    public function lastPageCoversEveryItem(int $totalItems, int $perPage, int $expectedLastPage): void
     {
         $request = new PageRequest(1, $perPage);
 
@@ -134,7 +134,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function page_past_the_last_page_is_clamped_to_the_last_page(): void
+    public function pagePastTheLastPageIsClampedToTheLastPage(): void
     {
         $request = new PageRequest(999_999, 20);
 
@@ -142,7 +142,7 @@ final class PageRequestTest extends TestCase
     }
 
     #[Test]
-    public function page_within_the_list_is_not_clamped(): void
+    public function pageWithinTheListIsNotClamped(): void
     {
         $request = new PageRequest(2, 20);
 

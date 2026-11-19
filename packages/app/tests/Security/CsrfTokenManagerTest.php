@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 final class CsrfTokenManagerTest extends TestCase
 {
     #[Test]
-    public function token_is_64_hexadecimal_characters(): void
+    public function tokenIs64HexadecimalCharacters(): void
     {
         $token = new CsrfTokenManager()->tokenFor(self::session());
 
@@ -24,7 +24,7 @@ final class CsrfTokenManagerTest extends TestCase
     }
 
     #[Test]
-    public function token_is_reused_within_a_session(): void
+    public function tokenIsReusedWithinASession(): void
     {
         $manager = new CsrfTokenManager();
         $session = self::session();
@@ -36,7 +36,7 @@ final class CsrfTokenManagerTest extends TestCase
     }
 
     #[Test]
-    public function sessions_get_different_tokens(): void
+    public function sessionsGetDifferentTokens(): void
     {
         $manager = new CsrfTokenManager();
 
@@ -44,7 +44,7 @@ final class CsrfTokenManagerTest extends TestCase
     }
 
     #[Test]
-    public function token_of_the_session_is_valid(): void
+    public function tokenOfTheSessionIsValid(): void
     {
         $manager = new CsrfTokenManager();
         $session = self::session();
@@ -66,7 +66,7 @@ final class CsrfTokenManagerTest extends TestCase
 
     #[Test]
     #[DataProvider('invalidTokens')]
-    public function other_submitted_tokens_are_invalid(mixed $submittedToken): void
+    public function otherSubmittedTokensAreInvalid(mixed $submittedToken): void
     {
         $manager = new CsrfTokenManager();
         $session = self::session();
@@ -76,7 +76,7 @@ final class CsrfTokenManagerTest extends TestCase
     }
 
     #[Test]
-    public function no_token_is_valid_when_the_session_has_none(): void
+    public function noTokenIsValidWhenTheSessionHasNone(): void
     {
         $manager = new CsrfTokenManager();
 

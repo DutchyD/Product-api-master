@@ -27,7 +27,7 @@ final class ImportRequestTest extends TestCase
 
     #[Test]
     #[DataProvider('allowedValues')]
-    public function allowed_count_and_offset_are_accepted(string $count, string $offset): void
+    public function allowedCountAndOffsetAreAccepted(string $count, string $offset): void
     {
         $request = ImportRequest::fromInput(['count' => $count, 'offset' => $offset]);
 
@@ -66,7 +66,7 @@ final class ImportRequestTest extends TestCase
      */
     #[Test]
     #[DataProvider('rejectedInput')]
-    public function invalid_fields_are_each_rejected_with_their_allowed_range(array $input, array $expectedErrors): void
+    public function invalidFieldsAreEachRejectedWithTheirAllowedRange(array $input, array $expectedErrors): void
     {
         try {
             (void) ImportRequest::fromInput($input);

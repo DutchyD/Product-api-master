@@ -199,6 +199,8 @@ final class Pages
 
     private static function templateRenderer(): TemplateRenderer
     {
-        return new TemplateRenderer(new Environment(new FilesystemLoader(self::TEMPLATES_DIRECTORY), ['strict_variables' => true]));
+        return new TemplateRenderer(
+            new Environment(new FilesystemLoader(self::TEMPLATES_DIRECTORY), ['strict_variables' => true]),
+        );
     }
 }

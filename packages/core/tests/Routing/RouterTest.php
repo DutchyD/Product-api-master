@@ -21,7 +21,7 @@ use Symfony\Component\Routing\Router as SymfonyRouter;
 final class RouterTest extends TestCase
 {
     #[Test]
-    public function matching_route_calls_the_action_with_the_route_parameters_and_the_request(): void
+    public function matchingRouteCallsTheActionWithTheRouteParametersAndTheRequest(): void
     {
         $response = self::router(new RecordingLogger())->handle(Request::create('/items/42'));
 
@@ -31,7 +31,7 @@ final class RouterTest extends TestCase
     }
 
     #[Test]
-    public function action_that_writes_its_own_output_gets_no_response(): void
+    public function actionThatWritesItsOwnOutputGetsNoResponse(): void
     {
         $response = self::router(new RecordingLogger())->handle(Request::create('/written'));
 
@@ -39,7 +39,7 @@ final class RouterTest extends TestCase
     }
 
     #[Test]
-    public function path_without_a_route_gets_404(): void
+    public function pathWithoutARouteGets404(): void
     {
         $response = self::router(new RecordingLogger())->handle(Request::create('/unknown'));
 
@@ -49,7 +49,7 @@ final class RouterTest extends TestCase
     }
 
     #[Test]
-    public function route_called_with_a_method_it_does_not_allow_gets_405_with_the_allowed_methods(): void
+    public function routeCalledWithAMethodItDoesNotAllowGets405WithTheAllowedMethods(): void
     {
         $response = self::router(new RecordingLogger())->handle(Request::create('/items/42', 'POST'));
 
@@ -59,7 +59,7 @@ final class RouterTest extends TestCase
     }
 
     #[Test]
-    public function failing_action_gets_500_without_details_and_the_failure_is_logged(): void
+    public function failingActionGets500WithoutDetailsAndTheFailureIsLogged(): void
     {
         $logger = new RecordingLogger();
 
@@ -69,11 +69,14 @@ final class RouterTest extends TestCase
         self::assertSame(500, $response->getStatusCode());
         self::assertSame('Internal Server Error', $response->getContent());
         self::assertCount(1, $logger->errors());
-        self::assertStringContainsString('GET /failing failed: RuntimeException: Database is down.', $logger->errors()[0]);
+        self::assertStringContainsString(
+            'GET /failing failed: RuntimeException: Database is down.',
+            $logger->errors()[0],
+        );
     }
 
     #[Test]
-    public function controller_that_cannot_be_created_gets_500(): void
+    public function controllerThatCannotBeCreatedGets500(): void
     {
         $logger = new RecordingLogger();
 
@@ -87,7 +90,10 @@ final class RouterTest extends TestCase
     private static function router(RecordingLogger $logger, bool $withController = true): Router
     {
         $routes = new RouteCollection();
-        $routes->add('item', new Route('/items/{id}', ['_controller' => FakeController::class . '::respond'], methods: ['GET']));
+        $routes->add(
+            'item',
+            new Route('/items/{id}', ['_controller' => FakeController::class . '::respond'], methods: ['GET']),
+        );
         $routes->add('written', new Route('/written', ['_controller' => FakeController::class . '::write']));
         $routes->add('failing', new Route('/failing', ['_controller' => FakeController::class . '::fail']));
 
@@ -96,6 +102,10 @@ final class RouterTest extends TestCase
             $container->set(FakeController::class, new FakeController());
         }
 
-        return new Router($container, new SymfonyRouter(new ClosureLoader(), static fn (): RouteCollection => $routes), $logger);
+        return new Router(
+            $container,
+            new SymfonyRouter(new ClosureLoader(), static fn (): RouteCollection => $routes),
+            $logger,
+        );
     }
 }

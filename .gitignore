@@ -35,6 +35,12 @@
 # Lint
 !/phpcs.xml.dist
 
+# Continuous integration
+!/.github
+!/.github/workflows
+!/.github/workflows/*.yml
+!/.github/workflows/*.yaml
+
 # Docker
 !/Dockerfile
 !/docker-compose.yml
